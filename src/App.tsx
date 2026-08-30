@@ -1,27 +1,37 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
+import PublicLayout from './layouts/PublicLayout';
+import HomePage from './pages/HomePage';
+import DailyWordPage from './pages/DailyWordPage';
+import SermonsPage from './pages/SermonsPage';
+import EventsPage from './pages/EventsPage';
+import AboutPage from './pages/AboutPage';
+import PastorPage from './pages/PastorPage';
+import PrayerPage from './pages/PrayerPage';
+import ContactPage from './pages/ContactPage';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          TCF Church
-        </h1>
-        <h2 className="text-2xl text-gray-700 mb-8">
-          Development Environment
-        </h2>
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md">
-          <p className="text-lg text-gray-600 mb-6">
-            React + TypeScript + Vite
-          </p>
-          <div className="bg-green-50 border-l-4 border-green-500 p-4">
-            <p className="text-green-800 font-semibold">
-              ✓ Project setup successful.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<PublicLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="daily-word" element={<DailyWordPage />} />
+          <Route path="sermons" element={<SermonsPage />} />
+          <Route path="events" element={<EventsPage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="pastor" element={<PastorPage />} />
+          <Route path="prayer" element={<PrayerPage />} />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="admin/login" element={<AdminLoginPage />} />
+          <Route path="admin" element={<AdminDashboardPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
