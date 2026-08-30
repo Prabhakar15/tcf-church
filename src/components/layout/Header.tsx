@@ -15,13 +15,15 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-white border-b-2 border-tcf-gold">
+      <div className="container-max">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex flex-col">
-            <span className="text-2xl font-bold text-gray-900">TCF</span>
-            <span className="text-xs text-gray-600">Tabernacle Christ Fellowship</span>
+          <Link to="/" className="flex flex-col group">
+            <span className="text-2xl font-bold text-tcf-navy group-hover:text-tcf-gold transition-colors">
+              TCF
+            </span>
+            <span className="text-xs text-[#6B7280]">Tabernacle Christ Fellowship</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -32,7 +34,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMobileMenu}
-            className="md:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="md:hidden p-2 rounded-md text-tcf-navy hover:bg-tcf-light-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tcf-navy"
             aria-label="Toggle menu"
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-menu"

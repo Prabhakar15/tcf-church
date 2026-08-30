@@ -17,18 +17,14 @@ interface NavigationProps {
 
 export default function Navigation({ onNavigate }: NavigationProps) {
   return (
-    <nav className="flex gap-6">
+    <nav className="flex gap-8">
       {navItems.map((item) => (
         <NavLink
           key={item.path}
           to={item.path}
           onClick={onNavigate}
           className={({ isActive }) =>
-            `px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-              isActive
-                ? 'bg-blue-100 text-blue-900'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`
+            `link-nav ${isActive ? 'active border-b-2 border-tcf-gold pb-1' : 'pb-1'}`
           }
         >
           {item.label}

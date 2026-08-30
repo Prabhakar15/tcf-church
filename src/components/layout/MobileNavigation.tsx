@@ -19,7 +19,7 @@ export default function MobileNavigation({ onNavigate }: MobileNavigationProps) 
   return (
     <nav
       id="mobile-menu"
-      className="md:hidden border-t border-gray-200 py-2"
+      className="md:hidden border-t-2 border-tcf-gold py-3"
     >
       <div className="flex flex-col gap-1">
         {navItems.map((item) => (
@@ -28,10 +28,10 @@ export default function MobileNavigation({ onNavigate }: MobileNavigationProps) 
             to={item.path}
             onClick={onNavigate}
             className={({ isActive }) =>
-              `px-4 py-2 text-base font-medium rounded-md transition-colors ${
+              `link-nav block px-4 py-3 text-base ${
                 isActive
-                  ? 'bg-blue-100 text-blue-900'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'active bg-tcf-light-bg'
+                  : 'hover:bg-tcf-light-bg'
               }`
             }
           >
