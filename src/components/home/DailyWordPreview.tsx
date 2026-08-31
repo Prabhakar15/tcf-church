@@ -1,50 +1,182 @@
 import { Link } from 'react-router-dom';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { getTodaysDailyWord } from '../../data/mock/dailyWord';
 
 export default function DailyWordPreview() {
+  const todayWord = getTodaysDailyWord();
+
   return (
-    <section className="py-section bg-white">
-      <div className="container-max max-w-content-lg">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Content */}
-          <div className="space-y-6">
-            <div>
-              <h2 className="mb-4">Today&apos;s Word</h2>
-              <div className="accent-bar"></div>
-            </div>
+    <section className="daily-word-preview">
+      <div className="daily-word-container">
+        {/* Header */}
+        <div className="daily-word-preview-header">
+          <p className="daily-word-label">Daily Inspiration</p>
+          <h2>Today&apos;s Word</h2>
+        </div>
 
-            <p className="text-lg text-text-dark leading-relaxed">
-              Start your day with encouragement and reflection from Scripture. TCF&apos;s Daily Word provides spiritual nourishment and biblical insight to guide your journey of faith.
-            </p>
+        {/* Content Card */}
+        <div className="daily-word-card">
+          {/* Scripture Reference */}
+          <p className="scripture-ref">{todayWord.scriptureReference}</p>
 
-            <p className="text-text-muted leading-relaxed">
-              Each day, we share a fresh word of hope and wisdom to inspire your walk with Jesus Christ. Whether you&apos;re facing challenges, seeking clarity, or simply wanting to deepen your faith, let God&apos;s word transform your day.
-            </p>
+          {/* Title */}
+          <h3 className="daily-word-title">{todayWord.title}</h3>
 
-            <div className="pt-4">
-              <Link to="/daily-word">
-                <Button variant="primary">
-                  View Daily Word
-                </Button>
-              </Link>
-            </div>
-          </div>
+          {/* Verse */}
+          <blockquote className="bible-verse">
+            &ldquo;{todayWord.bibleVerse}&rdquo;
+          </blockquote>
 
-          {/* Placeholder Card */}
-          <Card variant="accent">
-            <div className="text-center space-y-4 py-12">
-              <div className="text-4xl text-tcf-navy font-light">📖</div>
-              <h3 className="font-semibold text-tcf-navy">
-                Daily encouragement and reflection
-              </h3>
-              <p className="text-sm text-text-muted">
-                The Daily Word will appear here once it becomes available.
-              </p>
-            </div>
-          </Card>
+          {/* Message */}
+          <p className="daily-word-message">{todayWord.message}</p>
+
+          {/* Divider */}
+          <div className="daily-word-preview-divider"></div>
+
+          {/* CTA */}
+          <Link to="/daily-word" className="daily-word-read-btn">
+            Read Full Daily Word
+          </Link>
+        </div>
+
+        {/* Quote attribution */}
+        <div className="daily-word-footer">
+          <p>New word daily &middot; Encouraging your faith journey</p>
         </div>
       </div>
+
+      <style>{`
+        .daily-word-preview {
+          padding: 4rem 1.5rem;
+          background-color: #f9fafb;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        @media (max-width: 767px) {
+          .daily-word-preview {
+            padding: 2.5rem 1rem;
+          }
+        }
+
+        .daily-word-container {
+          max-width: 900px;
+          margin: 0 auto;
+        }
+
+        .daily-word-preview-header {
+          text-align: center;
+          margin-bottom: 3rem;
+        }
+
+        .daily-word-label {
+          font-size: 0.875rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 2.5px;
+          color: #C9A227;
+          margin: 0;
+          margin-bottom: 1rem;
+        }
+
+        .daily-word-preview-header h2 {
+          font-size: 2.5rem;
+          font-weight: 800;
+          color: #0B1F3A;
+          margin: 0;
+          line-height: 1.2;
+        }
+
+        @media (max-width: 767px) {
+          .daily-word-preview-header h2 {
+            font-size: 2rem;
+          }
+        }
+
+        .daily-word-card {
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 3rem 2rem;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 767px) {
+          .daily-word-card {
+            padding: 2rem 1.5rem;
+          }
+        }
+
+        .scripture-ref {
+          font-size: 0.875rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          color: #C9A227;
+          margin: 0 0 1rem 0;
+        }
+
+        .daily-word-title {
+          font-size: 1.75rem;
+          font-weight: 700;
+          color: #0B1F3A;
+          margin: 0 0 1.5rem 0;
+          line-height: 1.3;
+        }
+
+        .bible-verse {
+          font-size: 1.125rem;
+          color: #1F2937;
+          font-style: italic;
+          line-height: 1.8;
+          margin: 0 0 1.5rem 0;
+          padding: 1.5rem;
+          background-color: #f3f4f6;
+          border-left: 3px solid #C9A227;
+          border-radius: 4px;
+        }
+
+        .daily-word-message {
+          font-size: 1rem;
+          color: #6B7280;
+          line-height: 1.7;
+          margin: 0 0 2rem 0;
+        }
+
+        .daily-word-preview-divider {
+          height: 1px;
+          background-color: #e5e7eb;
+          margin: 2rem 0;
+        }
+
+        .daily-word-read-btn {
+          display: inline-block;
+          padding: 0.875rem 1.75rem;
+          background-color: #0B1F3A;
+          color: white;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: 700;
+          transition: all 0.3s ease;
+          border: 2px solid #0B1F3A;
+        }
+
+        .daily-word-read-btn:hover {
+          background-color: #1a3a52;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(11, 31, 58, 0.15);
+        }
+
+        .daily-word-footer {
+          text-align: center;
+          margin-top: 2rem;
+        }
+
+        .daily-word-footer p {
+          font-size: 0.875rem;
+          color: #9CA3AF;
+          margin: 0;
+        }
+      `}</style>
     </section>
   );
 }

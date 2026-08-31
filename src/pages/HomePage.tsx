@@ -1,25 +1,25 @@
 import HeroSection from '../components/home/HeroSection';
-import WelcomeSection from '../components/home/WelcomeSection';
-import VisionSection from '../components/home/VisionSection';
-import CommunitySection from '../components/home/CommunitySection';
-import PastorSection from '../components/home/PastorSection';
+import WorshipWithUs from '../components/home/WorshipWithUs';
 import DailyWordPreview from '../components/home/DailyWordPreview';
-import SermonPreview from '../components/home/SermonPreview';
-import EventsPreview from '../components/home/EventsPreview';
+import WatchAndListen from '../components/home/WatchAndListen';
+import VisionSection from '../components/home/VisionSection';
+import PastorSection from '../components/home/PastorSection';
+import WelcomeSection from '../components/home/WelcomeSection';
 import ConnectSection from '../components/home/ConnectSection';
+import FinalCTA from '../components/home/FinalCTA';
 
 export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <WelcomeSection />
-      <VisionSection />
-      <CommunitySection />
-      <PastorSection />
+      <WorshipWithUs />
       <DailyWordPreview />
-      <SermonPreview />
-      <EventsPreview />
+      <WatchAndListen />
+      <VisionSection />
+      <PastorSection />
+      <WelcomeSection />
       <ConnectSection />
+      <FinalCTA />
     </>
   );
 }

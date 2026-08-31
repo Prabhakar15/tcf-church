@@ -2,12 +2,10 @@ import { NavLink } from 'react-router-dom';
 
 const navItems = [
   { label: 'Home', path: '/' },
+  { label: 'About', path: '/about' },
   { label: 'Daily Word', path: '/daily-word' },
   { label: 'Sermons', path: '/sermons' },
   { label: 'Events', path: '/events' },
-  { label: 'About TCF', path: '/about' },
-  { label: 'Pastor', path: '/pastor' },
-  { label: 'Prayer', path: '/prayer' },
   { label: 'Contact', path: '/contact' },
 ];
 
@@ -17,28 +15,23 @@ interface MobileNavigationProps {
 
 export default function MobileNavigation({ onNavigate }: MobileNavigationProps) {
   return (
-    <nav
-      id="mobile-menu"
-      className="md:hidden border-t-2 border-tcf-gold py-3"
-    >
-      <div className="flex flex-col gap-1">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              `link-nav block px-4 py-3 text-base ${
-                isActive
-                  ? 'active bg-tcf-light-bg'
-                  : 'hover:bg-tcf-light-bg'
-              }`
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </div>
-    </nav>
+    <div className="space-y-1">
+      {navItems.map((item) => (
+        <NavLink
+          key={item.path}
+          to={item.path}
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            `block font-medium text-base px-3 py-2 rounded-md transition-colors ${
+              isActive
+                ? 'bg-tcf-gold text-white'
+                : 'text-gray-700 hover:bg-gray-100 hover:text-tcf-gold'
+            }`
+          }
+        >
+          {item.label}
+        </NavLink>
+      ))}
+    </div>
   );
 }
