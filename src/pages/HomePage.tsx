@@ -1,6 +1,7 @@
 import HeroSection from '../components/home/HeroSection';
 import WorshipWithUs from '../components/home/WorshipWithUs';
 import DailyWordPreview from '../components/home/DailyWordPreview';
+import ServicesPreview from '../components/home/ServicesPreview';
 import WatchAndListen from '../components/home/WatchAndListen';
 import VisionSection from '../components/home/VisionSection';
 import PastorSection from '../components/home/PastorSection';
@@ -14,6 +15,7 @@ export default function HomePage() {
       <HeroSection />
       <WorshipWithUs />
       <DailyWordPreview />
+      <ServicesPreview />
       <WatchAndListen />
       <VisionSection />
       <PastorSection />

@@ -102,6 +102,10 @@ export default function AdminDashboardPage() {
             <div className="number">—</div>
           </div>
           <div className="stat-card">
+            <h3>Services</h3>
+            <div className="number">—</div>
+          </div>
+          <div className="stat-card">
             <h3>Sermons</h3>
             <div className="number">—</div>
           </div>
@@ -121,6 +125,10 @@ export default function AdminDashboardPage() {
           <div className="nav-card" onClick={() => navigate('/admin/events')}>
             <h3>Events</h3>
             <p>Create and manage events</p>
+          </div>
+          <div className="nav-card" onClick={() => navigate('/admin/services')}>
+            <h3>Services</h3>
+            <p>Create and manage recurring services</p>
           </div>
           <div className="nav-card" onClick={() => navigate('/admin/sermons')}>
             <h3>Sermons</h3>

@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import DailyWordPage from './pages/DailyWordPage';
 import SermonsPage from './pages/SermonsPage';
 import EventsPage from './pages/EventsPage';
+import ServicesPage from './pages/ServicesPage';
 import AboutPage from './pages/AboutPage';
 import PastorPage from './pages/PastorPage';
 import PrayerPage from './pages/PrayerPage';
@@ -15,6 +16,7 @@ import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import DailyWordsAdminPage from './pages/admin/DailyWordsAdminPage';
 import EventsAdminPage from './pages/admin/EventsAdminPage';
+import ServicesAdminPage from './pages/admin/ServicesAdminPage';
 import SermonsAdminPage from './pages/admin/SermonsAdminPage';
 import PrayerRequestsAdminPage from './pages/admin/PrayerRequestsAdminPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -30,6 +32,7 @@ function App() {
             <Route path="daily-word" element={<DailyWordPage />} />
             <Route path="sermons" element={<SermonsPage />} />
             <Route path="events" element={<EventsPage />} />
+            <Route path="services" element={<ServicesPage />} />
             <Route path="about" element={<AboutPage />} />
             <Route path="pastor" element={<PastorPage />} />
             <Route path="prayer" element={<PrayerPage />} />
@@ -59,6 +62,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <EventsAdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="admin/services"
+            element={
+              <ProtectedRoute>
+                <ServicesAdminPage />
               </ProtectedRoute>
             }
           />

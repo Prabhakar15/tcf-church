@@ -10,7 +10,7 @@ export interface ChurchInfo {
   location: string;
 }
 
-// Service Information
+// Service Information (static)
 export interface Service {
   id: string;
   day: string;
@@ -58,6 +58,23 @@ export interface Event {
   address?: string;
   imageUrl?: string;
   status: 'draft' | 'published' | 'cancelled';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Recurring Service (weekly fellowships and services)
+export interface RecurringService {
+  id: string;
+  title: string;
+  category: string;
+  description?: string;
+  dayOfWeek: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+  startTime: string;
+  endTime?: string;
+  timezone: string;
+  location?: string;
+  displayOrder: number;
+  status: 'draft' | 'published';
   createdAt?: string;
   updatedAt?: string;
 }
