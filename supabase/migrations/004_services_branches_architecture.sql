@@ -92,7 +92,7 @@ WHERE category = 'Dormitory Brothers';
 -- Migrate Women's Fellowship → FELLOWSHIP + WOMEN_FELLOWSHIP
 UPDATE public.services 
 SET service_category = 'FELLOWSHIP', region = 'SINGAPORE', fellowship_group = 'WOMEN_FELLOWSHIP'
-WHERE category = 'Women\'s Fellowship';
+WHERE category = 'Women''s Fellowship';
 
 -- ============================================================================
 -- PART 4: SEED INITIAL BRANCHES
