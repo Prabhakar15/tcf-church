@@ -74,12 +74,14 @@ CREATE POLICY "testimonies_public_read"
   FOR SELECT
   USING (status = 'published');
 
--- Public: insert only (submit new testimonies) - always starts as draft
+-- Public: insert only (submit new testimonies) - MUST be draft status only
+-- This enforces that anonymous users can only submit testimonies in draft status.
+-- Attempts to INSERT with status='published' or status='rejected' will be rejected by the RLS policy.
 DROP POLICY IF EXISTS "testimonies_public_insert" ON public.testimonies;
 CREATE POLICY "testimonies_public_insert"
   ON public.testimonies
   FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (status = 'draft');
 
 -- Admins: full CRUD access
 DROP POLICY IF EXISTS "testimonies_admin_all" ON public.testimonies;
@@ -115,34 +117,57 @@ FOR EACH ROW
 EXECUTE FUNCTION public.update_testimonies_updated_at();
 
 -- ============================================================================
--- PART 7: SUMMARY
+-- PART 7: SECURITY NOTES
+-- ============================================================================
+-- Public INSERT Security:
+-- - RLS policy enforces: status = 'draft' (WITH CHECK clause)
+-- - Anonymous users CANNOT INSERT with status='published' or status='rejected'
+-- - Policy is checked at database level before INSERT is applied
+-- - Even if column DEFAULT is overridden in client, RLS policy enforces draft-only
+--
+-- Public SELECT Security:
+-- - RLS policy enforces: status = 'published'
+-- - Anonymous users cannot read draft or rejected testimonies
+-- - Access is enforced at database level via USING clause
+--
+-- Public UPDATE/DELETE Security:
+-- - No RLS policies grant UPDATE or DELETE to anonymous users
+-- - Both operations are implicitly denied (default-deny model)
+--
+-- Admin Access:
+-- - is_admin() authorization function provides full CRUD
+-- - Admins can INSERT with any valid status
+-- - Admins can UPDATE status transitions
+-- - Admins can DELETE testimonies
+-- - is_admin() is SECURITY DEFINER function (consistent with project pattern)
+--
+-- Data Integrity:
+-- - Deleting a branch sets testimonies.branch_id to NULL (ON DELETE SET NULL)
+-- - No orphaned testimonies possible
+-- - Status CHECK constraint enforces only valid lifecycle states
+-- - Display preference CHECK constraint enforces only valid preference values
+
+-- ============================================================================
+-- PART 8: SUMMARY
 -- ============================================================================
 -- Changes:
--- ✅ Created testimonies table with id, title, content, submitted_name, display_preference, branch_id, status, display_order, published_at, created_at, updated_at
+-- ✅ Created testimonies table with required and optional fields
 -- ✅ Added CHECK constraints on display_preference and status
 -- ✅ Added optional foreign key to branches table (ON DELETE SET NULL)
 -- ✅ Created indexes on status, branch_id, display_order, and composite published index
 -- ✅ Enabled RLS on testimonies table
 -- ✅ Public SELECT policy: only status = 'published'
--- ✅ Public INSERT policy: allowed without authentication (starts as draft)
+-- ✅ Public INSERT policy: ENFORCED draft status only (WITH CHECK status = 'draft')
 -- ✅ Admin policy: full CRUD access via is_admin()
 -- ✅ Created trigger for automatic updated_at
 --
--- Security Model:
--- - Public users can submit testimonies (INSERT with status defaulting to 'draft')
--- - Public users can only read published testimonies (SELECT where status = 'published')
--- - Admins can view all testimonies (draft, published, rejected)
--- - Admins can approve (status='published'), reject (status='rejected'), or delete
--- - Data isolation: no testimony can be modified by public users once submitted
---
--- Data Integrity:
--- - Deleting a branch sets branch_id to null (no orphaned testimonies)
--- - All required fields are NOT NULL
--- - Status defaults to 'draft' (unmoderated)
--- - Display preference defaults to 'FIRST_NAME_ONLY' (privacy-first)
--- - Empty table on first run (no fake/placeholder testimonies)
+-- Security Enforcement:
+-- - Database-level RLS prevents anonymous users from publishing testimonies
+-- - Public INSERT with status='published' or status='rejected' is REJECTED by RLS
+-- - Public users cannot SELECT draft/rejected content
+-- - Public users cannot UPDATE or DELETE any testimonies
+-- - Admin authorization via is_admin() provides complete moderation access
 --
 -- Verification:
 -- SELECT table_name FROM information_schema.tables WHERE table_name='testimonies';
--- SELECT * FROM public.testimonies LIMIT 0;
 -- SELECT * FROM pg_indexes WHERE tablename = 'testimonies';
