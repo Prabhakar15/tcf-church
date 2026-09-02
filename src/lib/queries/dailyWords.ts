@@ -184,3 +184,19 @@ function mapDailyWord(data: Record<string, unknown>): DailyWord {
     updatedAt: data.updated_at ? String(data.updated_at) : undefined
   };
 }
+
+/**
+ * Get count of all daily words (for admin dashboard)
+ */
+export async function getAllDailyWordsCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('daily_words')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) {
+    console.error('[DailyWords] Error counting:', error);
+    return 0;
+  }
+
+  return count || 0;
+}

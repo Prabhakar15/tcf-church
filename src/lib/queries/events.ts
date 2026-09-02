@@ -179,3 +179,19 @@ function mapEvent(data: Record<string, unknown>): Event {
     updatedAt: data.updated_at ? String(data.updated_at) : undefined
   };
 }
+
+/**
+ * Get count of all events (for admin dashboard)
+ */
+export async function getAllEventsCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('events')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) {
+    console.error('[Events] Error counting:', error);
+    return 0;
+  }
+
+  return count || 0;
+}

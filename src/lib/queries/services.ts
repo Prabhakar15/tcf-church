@@ -1,8 +1,15 @@
 import type { RecurringService } from '../../types';
 import { supabase } from '../supabase';
 
+export interface ServiceQueryResult {
+  data: RecurringService[];
+  error: string | null;
+  isLoading: boolean;
+}
+
 /**
  * Get all published services, ordered by display order
+ * Better error handling for debugging
  */
 export async function getPublishedServices(): Promise<RecurringService[]> {
   const { data, error } = await supabase
@@ -12,11 +19,21 @@ export async function getPublishedServices(): Promise<RecurringService[]> {
     .order('display_order', { ascending: true });
 
   if (error) {
-    console.error('Error fetching published services:', error);
+    console.error('[Services] Error fetching published services:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint
+    });
     return [];
   }
 
-  return data ? data.map(mapService) : [];
+  if (!data) {
+    console.warn('[Services] No data returned from published services query');
+    return [];
+  }
+
+  return data.map(mapService);
 }
 
 /**
@@ -31,7 +48,7 @@ export async function getPublishedServicesByCategory(category: string): Promise<
     .order('display_order', { ascending: true });
 
   if (error) {
-    console.error('Error fetching services by category:', error);
+    console.error('[Services] Error fetching services by category:', { category, error });
     return [];
   }
 
@@ -50,7 +67,7 @@ export async function getServiceById(id: string): Promise<RecurringService | nul
     .single();
 
   if (error) {
-    console.error('Error fetching service:', error);
+    console.error('[Services] Error fetching service by ID:', { id, error });
     return null;
   }
 
@@ -62,7 +79,7 @@ export async function getServiceById(id: string): Promise<RecurringService | nul
 // ============================================================================
 
 /**
- * Get all services (admin only)
+ * Get all services (admin only) - including drafts
  */
 export async function getAllServices(): Promise<RecurringService[]> {
   const { data, error } = await supabase
@@ -71,7 +88,7 @@ export async function getAllServices(): Promise<RecurringService[]> {
     .order('display_order', { ascending: true });
 
   if (error) {
-    console.error('Error fetching all services:', error);
+    console.error('[Services] Error fetching all services for admin:', error);
     return [];
   }
 
@@ -85,14 +102,14 @@ export async function createService(service: Omit<RecurringService, 'id' | 'crea
   const { data, error } = await supabase
     .from('services')
     .insert({
-      title: service.title,
+      title: service.title.trim(),
       category: service.category,
-      description: service.description || null,
+      description: service.description?.trim() || null,
       day_of_week: service.dayOfWeek,
       start_time: service.startTime,
       end_time: service.endTime || null,
       timezone: service.timezone,
-      location: service.location || null,
+      location: service.location?.trim() || null,
       display_order: service.displayOrder,
       status: service.status || 'published'
     })
@@ -100,7 +117,7 @@ export async function createService(service: Omit<RecurringService, 'id' | 'crea
     .single();
 
   if (error) {
-    console.error('Error creating service:', error);
+    console.error('[Services] Error creating service:', error);
     return null;
   }
 
@@ -113,14 +130,14 @@ export async function createService(service: Omit<RecurringService, 'id' | 'crea
 export async function updateService(id: string, updates: Partial<Omit<RecurringService, 'id' | 'createdAt' | 'updatedAt'>>): Promise<RecurringService | null> {
   const updateData: Record<string, unknown> = {};
 
-  if (updates.title !== undefined) updateData.title = updates.title;
+  if (updates.title !== undefined) updateData.title = updates.title.trim();
   if (updates.category !== undefined) updateData.category = updates.category;
-  if (updates.description !== undefined) updateData.description = updates.description;
+  if (updates.description !== undefined) updateData.description = updates.description?.trim() || null;
   if (updates.dayOfWeek !== undefined) updateData.day_of_week = updates.dayOfWeek;
   if (updates.startTime !== undefined) updateData.start_time = updates.startTime;
   if (updates.endTime !== undefined) updateData.end_time = updates.endTime;
   if (updates.timezone !== undefined) updateData.timezone = updates.timezone;
-  if (updates.location !== undefined) updateData.location = updates.location;
+  if (updates.location !== undefined) updateData.location = updates.location?.trim() || null;
   if (updates.displayOrder !== undefined) updateData.display_order = updates.displayOrder;
   if (updates.status !== undefined) updateData.status = updates.status;
 
@@ -132,7 +149,7 @@ export async function updateService(id: string, updates: Partial<Omit<RecurringS
     .single();
 
   if (error) {
-    console.error('Error updating service:', error);
+    console.error('[Services] Error updating service:', { id, error });
     return null;
   }
 
@@ -149,11 +166,44 @@ export async function deleteService(id: string): Promise<boolean> {
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting service:', error);
+    console.error('[Services] Error deleting service:', { id, error });
     return false;
   }
 
   return true;
+}
+
+/**
+ * Get count of published services (for dashboard)
+ */
+export async function getPublishedServicesCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('services')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'published');
+
+  if (error) {
+    console.error('[Services] Error counting published services:', error);
+    return 0;
+  }
+
+  return count || 0;
+}
+
+/**
+ * Get count of all services (for admin dashboard)
+ */
+export async function getAllServicesCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('services')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) {
+    console.error('[Services] Error counting all services:', error);
+    return 0;
+  }
+
+  return count || 0;
 }
 
 // ============================================================================

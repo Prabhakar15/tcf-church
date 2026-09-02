@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { RecurringService } from '../../types';
 import { getPublishedServices } from '../../lib/queries/services';
+import { formatServiceSchedule } from '../../lib/utils/formatters';
 
 export default function ServicesPreview() {
   const [services, setServices] = useState<RecurringService[]>([]);
@@ -11,7 +12,14 @@ export default function ServicesPreview() {
     const loadServices = async () => {
       try {
         const data = await getPublishedServices();
-        setServices(data.slice(0, 3));
+        // Curate meaningful services: Sunday Service, one from Dorm, and one from Prayer
+        const curated = [
+          data.find(s => s.category === 'Sunday Service'),
+          data.find(s => s.category === 'Dormitory Brothers'),
+          data.find(s => s.category === 'Early Morning Prayer' && s.timezone === 'Asia/Singapore')
+        ].filter(Boolean) as RecurringService[];
+        
+        setServices(curated.length > 0 ? curated : data.slice(0, 3));
       } catch (err) {
         console.error('Error loading services:', err);
       } finally {
@@ -40,8 +48,7 @@ export default function ServicesPreview() {
                 <strong>Every {service.dayOfWeek}</strong>
               </p>
               <p className="service-time">
-                {service.startTime}
-                {service.timezone && <span className="service-tz">{service.timezone}</span>}
+                {formatServiceSchedule(service.startTime, service.endTime, service.timezone)}
               </p>
               {service.location && (
                 <p className="service-location">📍 {service.location}</p>
@@ -123,20 +130,8 @@ export default function ServicesPreview() {
         .service-time {
           font-size: 0.9rem;
           color: #6B7280;
-          margin: 0 0 0.5rem 0;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          flex-wrap: wrap;
-        }
-
-        .service-tz {
-          font-size: 0.75rem;
-          background-color: #E0D5B7;
-          color: #0B1F3A;
-          padding: 0.2rem 0.5rem;
-          border-radius: 3px;
-          font-weight: 600;
+          margin: 0;
+          line-height: 1.5;
         }
 
         .service-location {

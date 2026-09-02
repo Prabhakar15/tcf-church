@@ -1,29 +1,19 @@
 import { useEffect, useState } from 'react';
 import type { RecurringService } from '../types';
 import { getPublishedServices } from '../lib/queries/services';
+import { formatServiceSchedule } from '../lib/utils/formatters';
 
-type ServiceCategory = 'Sunday Service' | 'Saturday Service' | 'Dormitory Brothers' | 'Women\'s Fellowship' | 'Early Morning Prayer';
-
-const CATEGORY_ORDER: ServiceCategory[] = [
-  'Sunday Service',
-  'Saturday Service',
-  'Dormitory Brothers',
-  'Women\'s Fellowship',
-  'Early Morning Prayer'
-];
-
-const CATEGORY_TITLES: Record<ServiceCategory, string> = {
-  'Sunday Service': 'Regular Services',
-  'Saturday Service': 'Regular Services',
-  'Dormitory Brothers': 'Dormitory Brothers Fellowship',
-  'Women\'s Fellowship': 'Women\'s Fellowship',
-  'Early Morning Prayer': 'Early Morning Prayer'
-};
+interface ServiceGroup {
+  groupName: string;
+  sectionTitle: string;
+  services: RecurringService[];
+  isSpecial?: boolean;
+}
 
 export default function ServicesPage() {
-  const [services, setServices] = useState<RecurringService[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [serviceGroups, setServiceGroups] = useState<ServiceGroup[]>([]);
 
   useEffect(() => {
     const loadServices = async () => {
@@ -31,7 +21,7 @@ export default function ServicesPage() {
       setError('');
       try {
         const data = await getPublishedServices();
-        setServices(data);
+        groupServices(data);
       } catch (err) {
         setError('Unable to load services. Please try again later.');
         console.error(err);
@@ -43,28 +33,87 @@ export default function ServicesPage() {
     loadServices();
   }, []);
 
-  const groupedServices = CATEGORY_ORDER.reduce((acc, category) => {
-    const categoryServices = services.filter(s => s.category === category);
-    if (categoryServices.length > 0) {
-      acc[category] = categoryServices;
-    }
-    return acc;
-  }, {} as Record<ServiceCategory, RecurringService[]>);
+  const groupServices = (allServices: RecurringService[]): void => {
+    const groups: ServiceGroup[] = [];
 
-  const formatDayRange = (service: RecurringService): string => {
-    if (service.category === 'Early Morning Prayer') {
-      const days = services
-        .filter(s => s.category === service.category && s.timezone === service.timezone)
-        .map(s => s.dayOfWeek)
-        .join(' – ');
-      return days || service.dayOfWeek;
+    // Regular Services (Sunday & Saturday)
+    const regularServices = allServices.filter(s => 
+      s.category === 'Sunday Service' || s.category === 'Saturday Service'
+    );
+    if (regularServices.length > 0) {
+      groups.push({
+        groupName: 'regular',
+        sectionTitle: 'Regular Services',
+        services: regularServices.sort((a, b) => a.displayOrder - b.displayOrder)
+      });
     }
-    return service.dayOfWeek;
-  };
 
-  const formatTime = (startTime: string, endTime?: string): string => {
-    if (!endTime) return startTime;
-    return `${startTime} – ${endTime}`;
+    // Dormitory Brothers
+    const dormServices = allServices.filter(s => s.category === 'Dormitory Brothers');
+    if (dormServices.length > 0) {
+      groups.push({
+        groupName: 'dormitory',
+        sectionTitle: 'Dormitory Brothers Fellowship',
+        services: dormServices.sort((a, b) => a.displayOrder - b.displayOrder)
+      });
+    }
+
+    // Women's Fellowship
+    const womenServices = allServices.filter(s => s.category === 'Women\'s Fellowship');
+    if (womenServices.length > 0) {
+      groups.push({
+        groupName: 'women',
+        sectionTitle: 'Women\'s Fellowship',
+        services: womenServices.sort((a, b) => a.displayOrder - b.displayOrder)
+      });
+    }
+
+    // Early Morning Prayer - Group by timezone
+    const prayerServices = allServices.filter(s => s.category === 'Early Morning Prayer');
+    if (prayerServices.length > 0) {
+      const singaporePrayer = prayerServices.filter(s => s.timezone === 'Asia/Singapore');
+      const indiaPrayer = prayerServices.filter(s => s.timezone === 'Asia/Kolkata');
+
+      if (singaporePrayer.length > 0) {
+        groups.push({
+          groupName: 'prayer-sg',
+          sectionTitle: 'Early Morning Prayer - Singapore',
+          services: [{
+            id: 'prayer-sg-group',
+            title: 'Tuesday – Friday',
+            category: 'Early Morning Prayer',
+            dayOfWeek: 'Tuesday',
+            startTime: singaporePrayer[0].startTime,
+            endTime: singaporePrayer[0].endTime,
+            timezone: 'Asia/Singapore',
+            status: 'published',
+            displayOrder: singaporePrayer[0].displayOrder
+          }],
+          isSpecial: true
+        });
+      }
+
+      if (indiaPrayer.length > 0) {
+        groups.push({
+          groupName: 'prayer-in',
+          sectionTitle: 'Early Morning Prayer - India',
+          services: [{
+            id: 'prayer-in-group',
+            title: 'Tuesday – Friday',
+            category: 'Early Morning Prayer',
+            dayOfWeek: 'Tuesday',
+            startTime: indiaPrayer[0].startTime,
+            endTime: indiaPrayer[0].endTime,
+            timezone: 'Asia/Kolkata',
+            status: 'published',
+            displayOrder: indiaPrayer[0].displayOrder
+          }],
+          isSpecial: true
+        });
+      }
+    }
+
+    setServiceGroups(groups);
   };
 
   return (
@@ -84,43 +133,45 @@ export default function ServicesPage() {
             <div className="error-state">
               <p>{error}</p>
             </div>
-          ) : Object.keys(groupedServices).length > 0 ? (
+          ) : serviceGroups.length > 0 ? (
             <div className="services-sections">
-              {CATEGORY_ORDER.map((category) => {
-                const categoryServices = groupedServices[category];
-                if (!categoryServices) return null;
-
-                return (
-                  <div key={category} className="services-section">
-                    <h2 className="section-title">{CATEGORY_TITLES[category]}</h2>
-                    <div className="services-grid">
-                      {categoryServices.map((service) => (
-                        <div key={service.id} className="service-card">
-                          <h3>{service.title}</h3>
-                          <div className="service-meta">
+              {serviceGroups.map((group) => (
+                <div key={group.groupName} className="services-section">
+                  <h2 className="section-title">{group.sectionTitle}</h2>
+                  <div className={group.isSpecial ? "services-special" : "services-grid"}>
+                    {group.services.map((service) => (
+                      <div key={service.id} className="service-card">
+                        <h3>{service.title}</h3>
+                        {group.isSpecial ? (
+                          <>
                             <p className="service-time">
-                              <strong>Every {formatDayRange(service)}</strong>
+                              <strong>{service.title}</strong>
                             </p>
                             <p className="service-hours">
-                              {formatTime(service.startTime, service.endTime)}
-                              {service.timezone && <span className="timezone">{service.timezone}</span>}
+                              {formatServiceSchedule(service.startTime, service.endTime, service.timezone)}
                             </p>
-                          </div>
-                          {service.location && (
-                            <p className="service-location">
-                              <span className="location-icon">📍</span>
-                              {service.location}
+                          </>
+                        ) : (
+                          <>
+                            <p className="service-time">
+                              <strong>Every {service.dayOfWeek}</strong>
                             </p>
-                          )}
-                          {service.description && (
-                            <p className="service-description">{service.description}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                            <p className="service-hours">
+                              {formatServiceSchedule(service.startTime, service.endTime, service.timezone)}
+                            </p>
+                          </>
+                        )}
+                        {service.location && (
+                          <p className="service-location">
+                            <span className="location-icon">📍</span>
+                            {service.location}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           ) : (
             <div className="empty-state">
@@ -174,7 +225,11 @@ export default function ServicesPage() {
         .section-title { font-size: 1.75rem; font-weight: 700; color: #0B1F3A; margin: 0 0 1.5rem 0; border-bottom: 3px solid #C9A227; padding-bottom: 0.75rem; }
         
         .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
-        @media (max-width: 767px) { .services-grid { grid-template-columns: 1fr; } }
+        .services-special { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
+        @media (max-width: 767px) { 
+          .services-grid { grid-template-columns: 1fr; } 
+          .services-special { grid-template-columns: 1fr; }
+        }
         
         .service-card { 
           padding: 1.5rem; 
@@ -187,15 +242,11 @@ export default function ServicesPage() {
         .service-card:hover { border-color: #C9A227; box-shadow: 0 8px 20px rgba(201, 162, 39, 0.15); }
         
         .service-card h3 { font-size: 1.25rem; font-weight: 700; color: #0B1F3A; margin: 0 0 1rem 0; }
-        .service-meta { margin-bottom: 1rem; }
         .service-time { font-weight: 600; color: #0B1F3A; margin: 0 0 0.5rem 0; font-size: 0.95rem; }
-        .service-hours { font-size: 0.9rem; color: #6B7280; margin: 0; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-        .timezone { font-size: 0.8rem; background-color: #E0D5B7; color: #0B1F3A; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 600; }
+        .service-hours { font-size: 0.9rem; color: #6B7280; margin: 0 0 0.75rem 0; }
         
         .service-location { font-size: 0.9rem; color: #6B7280; margin: 0.75rem 0 0 0; display: flex; align-items: center; gap: 0.5rem; }
         .location-icon { font-size: 1.1rem; }
-        
-        .service-description { font-size: 0.9rem; color: #6B7280; line-height: 1.6; margin: 0.75rem 0 0 0; }
         
         .empty-state { text-align: center; padding: 4rem 2rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; }
         .empty-state p { font-size: 1.125rem; color: #6B7280; margin: 0; }

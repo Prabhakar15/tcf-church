@@ -171,3 +171,19 @@ function mapSermon(data: Record<string, unknown>): Sermon {
     updatedAt: data.updated_at ? String(data.updated_at) : undefined
   };
 }
+
+/**
+ * Get count of all sermons (for admin dashboard)
+ */
+export async function getAllSermonsCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('sermons')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) {
+    console.error('[Sermons] Error counting:', error);
+    return 0;
+  }
+
+  return count || 0;
+}

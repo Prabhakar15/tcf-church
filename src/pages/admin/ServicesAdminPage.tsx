@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+
 import type { RecurringService } from '../../types';
 import { getAllServices, createService, updateService, deleteService } from '../../lib/queries/services';
+import AdminBreadcrumb from '../../components/admin/AdminBreadcrumb';
 
 type ServiceStatus = 'draft' | 'published';
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
@@ -15,7 +17,13 @@ const CATEGORIES = [
 ];
 const TIMEZONES = ['Asia/Singapore', 'Asia/Kolkata'];
 
+const TIMEZONE_LABELS: Record<string, string> = {
+  'Asia/Singapore': 'Singapore Time (SGT)',
+  'Asia/Kolkata': 'India Standard Time (IST)',
+};
+
 export default function ServicesAdminPage() {
+  // Removed: const navigate = useNavigate(); (not used yet)
   const [services, setServices] = useState<RecurringService[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -68,6 +76,10 @@ export default function ServicesAdminPage() {
     }
     if (!formData.startTime) {
       setFormError('Start time is required');
+      return false;
+    }
+    if (formData.endTime && formData.endTime === formData.startTime) {
+      setFormError('End time cannot be the same as start time');
       return false;
     }
 
@@ -182,8 +194,16 @@ export default function ServicesAdminPage() {
 
   return (
     <div className="admin-page">
+      <AdminBreadcrumb items={[
+        { label: 'Admin', path: '/admin' },
+        { label: 'Services & Fellowships' }
+      ]} />
+
       <div className="page-header">
-        <h1>Services & Fellowships</h1>
+        <div>
+          <h1>Services & Fellowships</h1>
+          <p className="page-description">Manage recurring services and fellowships</p>
+        </div>
         <button className="btn btn-primary" onClick={() => setShowForm(true)}>
           + Add Service
         </button>
@@ -200,7 +220,7 @@ export default function ServicesAdminPage() {
             
             <div className="form-grid">
               <div className="form-group">
-                <label>Title *</label>
+                <label>Title * <span className="required-indicator">required</span></label>
                 <input
                   type="text"
                   value={formData.title}
@@ -209,7 +229,7 @@ export default function ServicesAdminPage() {
                 />
               </div>
               <div className="form-group">
-                <label>Category *</label>
+                <label>Category * <span className="required-indicator">required</span></label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -232,7 +252,7 @@ export default function ServicesAdminPage() {
 
             <div className="form-grid">
               <div className="form-group">
-                <label>Day of Week *</label>
+                <label>Day of Week * <span className="required-indicator">required</span></label>
                 <select
                   value={formData.dayOfWeek}
                   onChange={(e) => setFormData({ ...formData, dayOfWeek: e.target.value as DayOfWeek })}
@@ -243,7 +263,7 @@ export default function ServicesAdminPage() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Start Time *</label>
+                <label>Start Time * <span className="required-indicator">required</span></label>
                 <input
                   type="time"
                   value={formData.startTime}
@@ -262,13 +282,13 @@ export default function ServicesAdminPage() {
                 />
               </div>
               <div className="form-group">
-                <label>Timezone</label>
+                <label>Timezone * <span className="required-indicator">required</span></label>
                 <select
                   value={formData.timezone}
                   onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
                 >
                   {TIMEZONES.map((tz) => (
-                    <option key={tz} value={tz}>{tz}</option>
+                    <option key={tz} value={tz}>{TIMEZONE_LABELS[tz]}</option>
                   ))}
                 </select>
               </div>
@@ -295,7 +315,7 @@ export default function ServicesAdminPage() {
             </div>
 
             <div className="form-group">
-              <label>Status</label>
+              <label>Status * <span className="required-indicator">required</span></label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as ServiceStatus })}
@@ -337,11 +357,11 @@ export default function ServicesAdminPage() {
             <tbody>
               {services.map((service) => (
                 <tr key={service.id}>
-                  <td>{service.title}</td>
+                  <td><strong>{service.title}</strong></td>
                   <td>{service.category}</td>
                   <td>{service.dayOfWeek}</td>
                   <td>{service.startTime}{service.endTime ? ` – ${service.endTime}` : ''}</td>
-                  <td>{service.timezone}</td>
+                  <td>{TIMEZONE_LABELS[service.timezone] || service.timezone}</td>
                   <td>{service.location || '—'}</td>
                   <td>
                     <span className={`status-badge status-${service.status}`}>
@@ -350,10 +370,10 @@ export default function ServicesAdminPage() {
                   </td>
                   <td>
                     <div className="actions">
-                      <button className="btn btn-secondary" onClick={() => handleEdit(service)}>
+                      <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(service)}>
                         Edit
                       </button>
-                      <button className="btn btn-danger" onClick={() => handleDelete(service.id)}>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(service.id)}>
                         Delete
                       </button>
                     </div>
@@ -370,10 +390,20 @@ export default function ServicesAdminPage() {
       )}
 
       <style>{`
-        .admin-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .admin-page { padding: 0; }
+        
+        .page-header { 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: flex-start;
+          margin-bottom: 2rem; 
+          gap: 2rem;
+        }
         .page-header h1 { margin: 0; font-size: 2rem; color: #0B1F3A; }
+        .page-description { margin: 0.5rem 0 0 0; color: #6B7280; font-size: 0.95rem; }
+        
         .btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+        .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
         .btn-primary { background-color: #C9A227; color: white; }
         .btn-primary:hover { background-color: #B8921F; transform: translateY(-2px); }
         .btn-secondary { background-color: #e5e7eb; color: #0B1F3A; }
@@ -392,7 +422,6 @@ export default function ServicesAdminPage() {
         td { padding: 1rem; border-bottom: 1px solid #e5e7eb; }
         tr:hover { background-color: #f9fafb; }
         .actions { display: flex; gap: 0.5rem; }
-        .actions button { padding: 0.5rem 1rem; font-size: 0.875rem; }
         
         .status-badge { padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.875rem; }
         .status-published { background-color: #dcfce7; color: #15803d; }
@@ -402,6 +431,7 @@ export default function ServicesAdminPage() {
         .form-container h2 { margin-top: 0; color: #0B1F3A; }
         .form-group { margin-bottom: 1.5rem; }
         .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #0B1F3A; }
+        .required-indicator { font-size: 0.8rem; color: #dc2626; }
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
         .form-group textarea { resize: vertical; min-height: 100px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }

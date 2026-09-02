@@ -191,3 +191,36 @@ function mapPrayerRequest(data: Record<string, unknown>): PrayerRequest {
     updatedAt: String(data.updated_at)
   };
 }
+
+/**
+ * Get count of all prayer requests (for admin dashboard)
+ */
+export async function getAllPrayerRequestsCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('prayer_requests')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) {
+    console.error('[PrayerRequests] Error counting:', error);
+    return 0;
+  }
+
+  return count || 0;
+}
+
+/**
+ * Get count of new prayer requests
+ */
+export async function getNewPrayerRequestsCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('prayer_requests')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'new');
+
+  if (error) {
+    console.error('[PrayerRequests] Error counting new:', error);
+    return 0;
+  }
+
+  return count || 0;
+}
