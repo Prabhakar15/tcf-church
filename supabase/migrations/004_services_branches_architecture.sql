@@ -165,7 +165,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE TRIGGER IF NOT EXISTS branches_updated_at_trigger
+DROP TRIGGER IF EXISTS branches_updated_at_trigger ON public.branches;
+CREATE TRIGGER branches_updated_at_trigger
 BEFORE UPDATE ON public.branches
 FOR EACH ROW
 EXECUTE FUNCTION public.update_branches_updated_at();
