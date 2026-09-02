@@ -8,6 +8,7 @@ import DailyWordPage from './pages/DailyWordPage';
 import SermonsPage from './pages/SermonsPage';
 import EventsPage from './pages/EventsPage';
 import ServicesPage from './pages/ServicesPage';
+import BranchesPage from './pages/BranchesPage';
 import AboutPage from './pages/AboutPage';
 import PastorPage from './pages/PastorPage';
 import PrayerPage from './pages/PrayerPage';
@@ -34,6 +35,7 @@ function App() {
             <Route path="sermons" element={<SermonsPage />} />
             <Route path="events" element={<EventsPage />} />
             <Route path="services" element={<ServicesPage />} />
+            <Route path="branches" element={<BranchesPage />} />
             <Route path="about" element={<AboutPage />} />
             <Route path="pastor" element={<PastorPage />} />
             <Route path="prayer" element={<PrayerPage />} />
