@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 import type { RecurringService } from '../types';
 import { getPublishedServices } from '../lib/queries/services';
+import { SERVICE_CATEGORIES, REGION_LABELS } from '../lib/constants/services';
 import { formatServiceSchedule } from '../lib/utils/formatters';
 
-interface ServiceGroup {
-  groupName: string;
-  sectionTitle: string;
-  services: RecurringService[];
-}
+type ServiceCategory = 'WORSHIP' | 'PRAYER' | 'FELLOWSHIP';
+type Region = 'SINGAPORE' | 'INDIA';
 
 export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [serviceGroups, setServiceGroups] = useState<ServiceGroup[]>([]);
+  const [allServices, setAllServices] = useState<RecurringService[]>([]);
+  const [activeCategory, setActiveCategory] = useState<ServiceCategory>('WORSHIP');
+  const [activePrayerRegion, setActivePrayerRegion] = useState<Region>('SINGAPORE');
 
   useEffect(() => {
     const loadServices = async () => {
@@ -20,7 +20,7 @@ export default function ServicesPage() {
       setError('');
       try {
         const data = await getPublishedServices();
-        groupServices(data);
+        setAllServices(data);
       } catch (err) {
         setError('Unable to load services at this time.');
         console.error(err);
@@ -32,80 +32,75 @@ export default function ServicesPage() {
     loadServices();
   }, []);
 
-  const groupServices = (allServices: RecurringService[]): void => {
-    const groups: ServiceGroup[] = [];
-
-    // Regular Services (Sunday & Saturday)
-    const regularServices = allServices.filter(s => 
-      s.category === 'Sunday Service' || s.category === 'Saturday Service'
-    );
-    if (regularServices.length > 0) {
-      groups.push({
-        groupName: 'regular',
-        sectionTitle: 'Regular Services',
-        services: regularServices.sort((a, b) => a.displayOrder - b.displayOrder)
-      });
-    }
-
-    // Dormitory Brothers
-    const dormServices = allServices.filter(s => s.category === 'Dormitory Brothers');
-    if (dormServices.length > 0) {
-      groups.push({
-        groupName: 'dormitory',
-        sectionTitle: 'Dormitory Brothers Fellowship',
-        services: dormServices.sort((a, b) => a.displayOrder - b.displayOrder)
-      });
-    }
-
-    // Women's Fellowship
-    const womenServices = allServices.filter(s => s.category === 'Women\'s Fellowship');
-    if (womenServices.length > 0) {
-      groups.push({
-        groupName: 'women',
-        sectionTitle: 'Women\'s Fellowship',
-        services: womenServices.sort((a, b) => a.displayOrder - b.displayOrder)
-      });
-    }
-
-    // Early Morning Prayer - Singapore
-    const singaporePrayer = allServices.filter(s => 
-      s.category === 'Early Morning Prayer' && s.timezone === 'Asia/Singapore'
-    );
-    if (singaporePrayer.length > 0) {
-      groups.push({
-        groupName: 'prayer-sg',
-        sectionTitle: 'Early Morning Prayer - Singapore',
-        services: singaporePrayer.sort((a, b) => {
-          const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-          return dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
-        })
-      });
-    }
-
-    // Early Morning Prayer - India
-    const indiaPrayer = allServices.filter(s => 
-      s.category === 'Early Morning Prayer' && s.timezone === 'Asia/Kolkata'
-    );
-    if (indiaPrayer.length > 0) {
-      groups.push({
-        groupName: 'prayer-in',
-        sectionTitle: 'Early Morning Prayer - India',
-        services: indiaPrayer.sort((a, b) => {
-          const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-          return dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
-        })
-      });
-    }
-
-    setServiceGroups(groups);
+  // Get services by category
+  const getWorshipServices = (): RecurringService[] => {
+    return allServices
+      .filter(s => s.serviceCategory === SERVICE_CATEGORIES.WORSHIP)
+      .sort((a, b) => a.displayOrder - b.displayOrder);
   };
+
+  const getPrayerServices = (region: Region): RecurringService[] => {
+    return allServices
+      .filter(s => s.serviceCategory === SERVICE_CATEGORIES.PRAYER && s.region === region)
+      .sort((a, b) => {
+        const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        return dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
+      });
+  };
+
+  const getFellowshipServices = (groupKey?: string): RecurringService[] => {
+    let services = allServices.filter(s => s.serviceCategory === SERVICE_CATEGORIES.FELLOWSHIP);
+    if (groupKey) {
+      services = services.filter(s => {
+        if (groupKey === 'women') return s.fellowshipGroup === 'WOMEN_FELLOWSHIP';
+        if (groupKey === 'dor') return s.fellowshipGroup === 'DOR_BROTHERS';
+        return false;
+      });
+    }
+    return services.sort((a, b) => a.displayOrder - b.displayOrder);
+  };
+
+  // Tab navigation
+  const categories: { id: ServiceCategory; label: string }[] = [
+    { id: 'WORSHIP', label: 'Worship' },
+    { id: 'PRAYER', label: 'Prayer' },
+    { id: 'FELLOWSHIP', label: 'Fellowship' },
+  ];
+
+  const prayerRegions: { id: Region; label: string }[] = [
+    { id: 'SINGAPORE', label: 'Singapore' },
+    { id: 'INDIA', label: 'India' },
+  ];
+
+  const renderServiceCard = (service: RecurringService) => (
+    <div key={service.id} className="service-card">
+      <h3>{service.title}</h3>
+      <p className="service-day">
+        <strong>Every {service.dayOfWeek}</strong>
+      </p>
+      <p className="service-hours">
+        {formatServiceSchedule(service.startTime, service.endTime, service.timezone)}
+      </p>
+      {service.location ? (
+        <p className="service-location">
+          <span className="location-icon">📍</span>
+          {service.location}
+        </p>
+      ) : (
+        <p className="service-location empty">
+          <span className="location-icon">📍</span>
+          Location to be announced
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <div className="services-page">
       <section className="page-header">
         <div className="page-header-container">
-          <h1>Services & Fellowships</h1>
-          <p>Join us for worship, fellowship, and community gatherings throughout the week</p>
+          <h1>Services</h1>
+          <p>Gathering together in worship, prayer and fellowship.</p>
         </div>
       </section>
 
@@ -126,42 +121,102 @@ export default function ServicesPage() {
                 Try Again
               </button>
             </div>
-          ) : serviceGroups.length > 0 ? (
-            <div className="services-sections">
-              {serviceGroups.map((group) => (
-                <div key={group.groupName} className="services-section">
-                  <h2 className="section-title">{group.sectionTitle}</h2>
-                  <div className="services-grid">
-                    {group.services.map((service) => (
-                      <div key={service.id} className="service-card">
-                        <h3>{service.title}</h3>
-                        <p className="service-day">
-                          <strong>Every {service.dayOfWeek}</strong>
-                        </p>
-                        <p className="service-hours">
-                          {formatServiceSchedule(service.startTime, service.endTime, service.timezone)}
-                        </p>
-                        {service.location ? (
-                          <p className="service-location">
-                            <span className="location-icon">📍</span>
-                            {service.location}
-                          </p>
-                        ) : (
-                          <p className="service-location empty">
-                            <span className="location-icon">📍</span>
-                            Location to be announced
-                          </p>
-                        )}
-                      </div>
+          ) : (
+            <>
+              {/* Category Tabs */}
+              <div className="category-tabs">
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    className={`tab-button ${activeCategory === cat.id ? 'active' : ''}`}
+                    onClick={() => setActiveCategory(cat.id)}
+                    aria-selected={activeCategory === cat.id}
+                    role="tab"
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Worship Tab */}
+              {activeCategory === 'WORSHIP' && (
+                <div className="tab-content">
+                  {getWorshipServices().length > 0 ? (
+                    <div className="services-grid">
+                      {getWorshipServices().map(renderServiceCard)}
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      <p>No worship services available at this time.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Prayer Tab */}
+              {activeCategory === 'PRAYER' && (
+                <div className="tab-content">
+                  {/* Prayer Region Tabs */}
+                  <div className="prayer-region-tabs">
+                    {prayerRegions.map(region => (
+                      <button
+                        key={region.id}
+                        className={`region-button ${activePrayerRegion === region.id ? 'active' : ''}`}
+                        onClick={() => setActivePrayerRegion(region.id)}
+                        aria-selected={activePrayerRegion === region.id}
+                        role="tab"
+                      >
+                        {region.label}
+                      </button>
                     ))}
                   </div>
+
+                  {/* Prayer Services for Selected Region */}
+                  {getPrayerServices(activePrayerRegion).length > 0 ? (
+                    <div className="services-grid">
+                      {getPrayerServices(activePrayerRegion).map(renderServiceCard)}
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      <p>No prayer services available for {REGION_LABELS[activePrayerRegion]} at this time.</p>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <p>No services are currently available.</p>
-            </div>
+              )}
+
+              {/* Fellowship Tab */}
+              {activeCategory === 'FELLOWSHIP' && (
+                <div className="tab-content">
+                  {/* Women Fellowship Section */}
+                  <div className="fellowship-section">
+                    <h2 className="fellowship-title">Women Fellowship</h2>
+                    {getFellowshipServices('women').length > 0 ? (
+                      <div className="services-grid">
+                        {getFellowshipServices('women').map(renderServiceCard)}
+                      </div>
+                    ) : (
+                      <div className="empty-state">
+                        <p>No Women Fellowship services available at this time.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dor Brothers Section */}
+                  <div className="fellowship-section">
+                    <h2 className="fellowship-title">Dor Brothers</h2>
+                    {getFellowshipServices('dor').length > 0 ? (
+                      <div className="services-grid">
+                        {getFellowshipServices('dor').map(renderServiceCard)}
+                      </div>
+                    ) : (
+                      <div className="empty-state">
+                        <p>No Dor Brothers services available at this time.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
@@ -276,17 +331,112 @@ export default function ServicesPage() {
           transform: translateY(-2px);
         }
         
-        .services-sections { display: flex; flex-direction: column; gap: 3rem; }
+        /* Category Tabs */
+        .category-tabs {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 2rem;
+          border-bottom: 2px solid #e5e7eb;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 767px) {
+          .category-tabs {
+            gap: 0.5rem;
+          }
+        }
         
-        .services-section { }
-        .section-title { 
-          font-size: 1.75rem; 
-          font-weight: 700; 
-          color: #0B1F3A; 
-          margin: 0 0 1.5rem 0; 
-          border-bottom: 4px solid #C9A227; 
+        .tab-button {
+          background: none;
+          border: none;
+          color: #6B7280;
+          font-size: 1rem;
+          font-weight: 600;
+          padding: 0.75rem 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border-bottom: 3px solid transparent;
+          position: relative;
+          bottom: -2px;
+        }
+        
+        .tab-button:hover {
+          color: #0B1F3A;
+        }
+        
+        .tab-button.active {
+          color: #0B1F3A;
+          border-bottom-color: #C9A227;
+        }
+        
+        /* Prayer Region Tabs */
+        .prayer-region-tabs {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 2rem;
+          padding: 1rem 0;
+          border-top: 1px solid #e5e7eb;
+          border-bottom: 1px solid #e5e7eb;
+          background-color: #f9fafb;
+        }
+        @media (max-width: 767px) {
+          .prayer-region-tabs {
+            gap: 0.5rem;
+          }
+        }
+        
+        .region-button {
+          background: white;
+          border: 2px solid #e5e7eb;
+          color: #6B7280;
+          font-size: 0.95rem;
+          font-weight: 600;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        
+        .region-button:hover {
+          border-color: #C9A227;
+          color: #0B1F3A;
+        }
+        
+        .region-button.active {
+          background-color: #C9A227;
+          border-color: #C9A227;
+          color: #0B1F3A;
+        }
+        
+        /* Tab Content */
+        .tab-content {
+          animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        /* Fellowship Sections */
+        .fellowship-section {
+          margin-bottom: 3rem;
+        }
+        
+        .fellowship-section:last-child {
+          margin-bottom: 0;
+        }
+        
+        .fellowship-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #0B1F3A;
+          margin: 0 0 1.5rem 0;
+          border-bottom: 3px solid #C9A227;
           padding-bottom: 0.75rem;
-          text-align: left;
         }
         
         .services-grid { 
@@ -348,13 +498,13 @@ export default function ServicesPage() {
         
         .empty-state { 
           text-align: center; 
-          padding: 4rem 2rem; 
+          padding: 2rem;
           background-color: #f9fafb; 
           border: 1px solid #e5e7eb; 
           border-radius: 12px; 
         }
         .empty-state p { 
-          font-size: 1.125rem; 
+          font-size: 1rem; 
           color: #6B7280; 
           margin: 0; 
         }
