@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Event } from '../../types';
 import { getAllEvents, createEvent, updateEvent, deleteEvent } from '../../lib/queries/events';
+import AdminBackNav from '../../components/admin/AdminBackNav';
 
 type EventStatus = 'draft' | 'published' | 'cancelled';
 
@@ -162,6 +163,7 @@ export default function EventsAdminPage() {
 
   return (
     <div className="admin-page">
+      <AdminBackNav pageTitle="Events" />
       <style>{`
         .admin-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }

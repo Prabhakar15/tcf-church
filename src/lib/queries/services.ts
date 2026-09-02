@@ -111,7 +111,11 @@ export async function createService(service: Omit<RecurringService, 'id' | 'crea
       timezone: service.timezone,
       location: service.location?.trim() || null,
       display_order: service.displayOrder,
-      status: service.status || 'published'
+      status: service.status || 'published',
+      service_category: service.serviceCategory || null,
+      region: service.region || null,
+      fellowship_group: service.fellowshipGroup || null,
+      branch_id: service.branchId || null
     })
     .select()
     .single();
@@ -140,6 +144,10 @@ export async function updateService(id: string, updates: Partial<Omit<RecurringS
   if (updates.location !== undefined) updateData.location = updates.location?.trim() || null;
   if (updates.displayOrder !== undefined) updateData.display_order = updates.displayOrder;
   if (updates.status !== undefined) updateData.status = updates.status;
+  if (updates.serviceCategory !== undefined) updateData.service_category = updates.serviceCategory;
+  if (updates.region !== undefined) updateData.region = updates.region;
+  if (updates.fellowshipGroup !== undefined) updateData.fellowship_group = updates.fellowshipGroup;
+  if (updates.branchId !== undefined) updateData.branch_id = updates.branchId;
 
   const { data, error } = await supabase
     .from('services')
@@ -226,6 +234,10 @@ function mapService(data: Record<string, unknown>): RecurringService {
     location: data.location ? String(data.location) : undefined,
     displayOrder: Number(data.display_order) || 0,
     status: (data.status as 'draft' | 'published') || 'published',
+    serviceCategory: data.service_category ? String(data.service_category) as any : undefined,
+    region: data.region ? String(data.region) as any : undefined,
+    fellowshipGroup: data.fellowship_group ? String(data.fellowship_group) as any : undefined,
+    branchId: data.branch_id ? String(data.branch_id) : undefined,
     createdAt: data.created_at ? String(data.created_at) : undefined,
     updatedAt: data.updated_at ? String(data.updated_at) : undefined
   };

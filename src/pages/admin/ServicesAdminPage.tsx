@@ -1,77 +1,116 @@
 import { useEffect, useState } from 'react';
-
-import type { RecurringService } from '../../types';
+import type { RecurringService, Branch } from '../../types';
 import { getAllServices, createService, updateService, deleteService } from '../../lib/queries/services';
-import AdminBreadcrumb from '../../components/admin/AdminBreadcrumb';
+import { getAllBranches } from '../../lib/queries/branches';
+import {
+  SERVICE_CATEGORIES,
+  REGIONS,
+  FELLOWSHIP_GROUPS,
+  SERVICE_CATEGORY_LABELS,
+  REGION_LABELS,
+  FELLOWSHIP_GROUP_LABELS,
+  isRegionRequiredForCategory,
+  isFellowshipGroupRequiredForCategory,
+} from '../../lib/constants/services';
+import AdminBackNav from '../../components/admin/AdminBackNav';
 
 type ServiceStatus = 'draft' | 'published';
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+type ServiceCategory = typeof SERVICE_CATEGORIES[keyof typeof SERVICE_CATEGORIES];
+type Region = typeof REGIONS[keyof typeof REGIONS];
 
 const DAYS_OF_WEEK: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const CATEGORIES = [
-  'Sunday Service',
-  'Saturday Service',
-  'Dormitory Brothers',
-  'Women\'s Fellowship',
-  'Early Morning Prayer'
-];
 const TIMEZONES = ['Asia/Singapore', 'Asia/Kolkata'];
-
 const TIMEZONE_LABELS: Record<string, string> = {
   'Asia/Singapore': 'Singapore Time (SGT)',
   'Asia/Kolkata': 'India Standard Time (IST)',
 };
+const SERVICES_PER_PAGE = 5;
+
 
 export default function ServicesAdminPage() {
-  // Removed: const navigate = useNavigate(); (not used yet)
   const [services, setServices] = useState<RecurringService[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<RecurringService | null>(null);
-  const [formData, setFormData] = useState({
+  const [currentPage, setCurrentPage] = useState(0);
+  
+  const [formData, setFormData] = useState<{
+    title: string;
+    category: string;
+    description: string;
+    dayOfWeek: DayOfWeek;
+    startTime: string;
+    endTime: string;
+    timezone: string;
+    location: string;
+    displayOrder: number;
+    status: ServiceStatus;
+    serviceCategory: ServiceCategory;
+    region: Region;
+    fellowshipGroup: string;
+    branchId: string;
+  }>({
     title: '',
     category: 'Sunday Service',
     description: '',
-    dayOfWeek: 'Sunday' as DayOfWeek,
+    dayOfWeek: 'Sunday',
     startTime: '09:00',
     endTime: '10:00',
     timezone: 'Asia/Singapore',
     location: '',
     displayOrder: 0,
-    status: 'published' as ServiceStatus
+    status: 'published',
+    serviceCategory: SERVICE_CATEGORIES.WORSHIP,
+    region: REGIONS.SINGAPORE,
+    fellowshipGroup: '',
+    branchId: '',
   });
+  
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    loadServices();
+    loadData();
   }, []);
 
-  const loadServices = async () => {
+  const loadData = async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await getAllServices();
-      setServices(data);
+      const [servicesData, branchesData] = await Promise.all([
+        getAllServices(),
+        getAllBranches(),
+      ]);
+      setServices(servicesData);
+      setBranches(branchesData);
     } catch (err) {
-      setError('Failed to load services. Please try again.');
+      setError('Failed to load data. Please try again.');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Get branches filtered by selected region
+  const getFilteredBranches = (): Branch[] => {
+    if (!formData.region) return [];
+    return branches.filter((b) => b.region === formData.region && b.status === 'published');
+  };
+
+  // Validate form data
   const validateForm = () => {
     setFormError('');
-    
+
     if (!formData.title.trim()) {
       setFormError('Title is required');
       return false;
     }
-    if (!formData.category) {
-      setFormError('Category is required');
+    if (!formData.serviceCategory) {
+      setFormError('Service category is required');
       return false;
     }
     if (!formData.startTime) {
@@ -83,12 +122,47 @@ export default function ServicesAdminPage() {
       return false;
     }
 
+    // Validate Category-specific rules
+    if (isRegionRequiredForCategory(formData.serviceCategory)) {
+      if (!formData.region) {
+        setFormError('Region is required for Prayer services');
+        return false;
+      }
+    }
+
+    if (isFellowshipGroupRequiredForCategory(formData.serviceCategory)) {
+      if (!formData.fellowshipGroup) {
+        setFormError('Fellowship Group is required for Fellowship services');
+        return false;
+      }
+    }
+
+    // Validate branch belongs to region if selected
+    if (formData.branchId && formData.region) {
+      const selectedBranch = branches.find((b) => b.id === formData.branchId);
+      if (selectedBranch && selectedBranch.region !== formData.region) {
+        setFormError(`Selected branch does not belong to ${REGION_LABELS[formData.region]}`);
+        return false;
+      }
+    }
+
+    // Prevent invalid category combinations
+    if ((formData.serviceCategory as string) === SERVICE_CATEGORIES.PRAYER && formData.fellowshipGroup) {
+      setFormError('Prayer services cannot have a Fellowship Group');
+      return false;
+    }
+
+    if ((formData.serviceCategory as string) === SERVICE_CATEGORIES.WORSHIP && formData.fellowshipGroup) {
+      setFormError('Worship services cannot have a Fellowship Group');
+      return false;
+    }
+
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setSubmitting(true);
@@ -106,7 +180,12 @@ export default function ServicesAdminPage() {
         timezone: formData.timezone,
         location: formData.location || undefined,
         displayOrder: formData.displayOrder,
-        status: formData.status
+        status: formData.status,
+        // Phase 4B new fields
+        serviceCategory: formData.serviceCategory,
+        region: formData.region,
+        fellowshipGroup: (formData.fellowshipGroup || undefined) as any,
+        branchId: formData.branchId || undefined,
       };
 
       if (editing) {
@@ -119,20 +198,8 @@ export default function ServicesAdminPage() {
 
       setShowForm(false);
       setEditing(null);
-      setFormData({
-        title: '',
-        category: 'Sunday Service',
-        description: '',
-        dayOfWeek: 'Sunday',
-        startTime: '09:00',
-        endTime: '10:00',
-        timezone: 'Asia/Singapore',
-        location: '',
-        displayOrder: 0,
-        status: 'published'
-      });
-
-      await loadServices();
+      resetForm();
+      await loadData();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setFormError('Failed to save service. Please try again.');
@@ -140,6 +207,25 @@ export default function ServicesAdminPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      category: 'Sunday Service',
+      description: '',
+      dayOfWeek: 'Sunday',
+      startTime: '09:00',
+      endTime: '10:00',
+      timezone: 'Asia/Singapore',
+      location: '',
+      displayOrder: 0,
+      status: 'published',
+      serviceCategory: SERVICE_CATEGORIES.WORSHIP,
+      region: REGIONS.SINGAPORE,
+      fellowshipGroup: '',
+      branchId: '',
+    });
   };
 
   const handleEdit = (service: RecurringService) => {
@@ -154,7 +240,11 @@ export default function ServicesAdminPage() {
       timezone: service.timezone,
       location: service.location || '',
       displayOrder: service.displayOrder,
-      status: service.status as ServiceStatus
+      status: service.status as ServiceStatus,
+      serviceCategory: service.serviceCategory || SERVICE_CATEGORIES.WORSHIP,
+      region: (service.region || REGIONS.SINGAPORE) as Region,
+      fellowshipGroup: (service.fellowshipGroup || '') as string,
+      branchId: service.branchId || '',
     });
     setShowForm(true);
     setFormError('');
@@ -166,7 +256,7 @@ export default function ServicesAdminPage() {
     try {
       await deleteService(id);
       setSuccess('Service deleted successfully!');
-      await loadServices();
+      await loadData();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError('Failed to delete service. Please try again.');
@@ -177,28 +267,44 @@ export default function ServicesAdminPage() {
   const handleCancel = () => {
     setShowForm(false);
     setEditing(null);
-    setFormData({
-      title: '',
-      category: 'Sunday Service',
-      description: '',
-      dayOfWeek: 'Sunday',
-      startTime: '09:00',
-      endTime: '10:00',
-      timezone: 'Asia/Singapore',
-      location: '',
-      displayOrder: 0,
-      status: 'published'
-    });
+    resetForm();
     setFormError('');
   };
 
+  // Handle category change
+  const handleCategoryChange = (newCategory: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      serviceCategory: newCategory as any,
+      // Clear inappropriate fields based on category
+      ...(newCategory !== SERVICE_CATEGORIES.FELLOWSHIP && { fellowshipGroup: '' }),
+      ...(newCategory !== SERVICE_CATEGORIES.PRAYER && { region: REGIONS.SINGAPORE }),
+    }));
+  };
+
+  // Handle region change - clear branch if incompatible
+  const handleRegionChange = (newRegion: string) => {
+    const selectedBranch = branches.find((b) => b.id === formData.branchId);
+    const newBranchId = selectedBranch && selectedBranch.region !== newRegion ? '' : formData.branchId;
+
+    setFormData((prev) => ({
+      ...prev,
+      region: newRegion as any,
+      branchId: newBranchId,
+    }));
+  };
+
+  const startIdx = currentPage * SERVICES_PER_PAGE;
+  const endIdx = startIdx + SERVICES_PER_PAGE;
+  const paginatedServices = services.slice(startIdx, endIdx);
+  const pageCount = Math.ceil(services.length / SERVICES_PER_PAGE);
+  const showPagination = pageCount > 1;
+
+  const filteredBranches = getFilteredBranches();
+
   return (
     <div className="admin-page">
-      <AdminBreadcrumb items={[
-        { label: 'Admin', path: '/admin' },
-        { label: 'Services & Fellowships' }
-      ]} />
-
+      <AdminBackNav pageTitle="Services" />
       <div className="page-header">
         <div>
           <h1>Services & Fellowships</h1>
@@ -217,10 +323,24 @@ export default function ServicesAdminPage() {
           <h2>{editing ? 'Edit Service' : 'Add New Service'}</h2>
           <form onSubmit={handleSubmit}>
             {formError && <div className="alert alert-error">{formError}</div>}
-            
+
+            {/* Service Category */}
+            <div className="form-group">
+              <label>Service Category * <span className="required-indicator">required</span></label>
+              <select
+                value={formData.serviceCategory}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+              >
+                <option value={SERVICE_CATEGORIES.WORSHIP}>{SERVICE_CATEGORY_LABELS.WORSHIP}</option>
+                <option value={SERVICE_CATEGORIES.PRAYER}>{SERVICE_CATEGORY_LABELS.PRAYER}</option>
+                <option value={SERVICE_CATEGORIES.FELLOWSHIP}>{SERVICE_CATEGORY_LABELS.FELLOWSHIP}</option>
+              </select>
+            </div>
+
+            {/* Basic Service Info */}
             <div className="form-grid">
               <div className="form-group">
-                <label>Title * <span className="required-indicator">required</span></label>
+                <label>Service Name * <span className="required-indicator">required</span></label>
                 <input
                   type="text"
                   value={formData.title}
@@ -229,18 +349,16 @@ export default function ServicesAdminPage() {
                 />
               </div>
               <div className="form-group">
-                <label>Category * <span className="required-indicator">required</span></label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                <label>Display Order</label>
+                <input
+                  type="number"
+                  value={formData.displayOrder}
+                  onChange={(e) => setFormData({ ...formData, displayOrder: Number(e.target.value) })}
+                />
               </div>
             </div>
 
+            {/* Description */}
             <div className="form-group">
               <label>Description</label>
               <textarea
@@ -250,6 +368,7 @@ export default function ServicesAdminPage() {
               />
             </div>
 
+            {/* Schedule Fields */}
             <div className="form-grid">
               <div className="form-group">
                 <label>Day of Week * <span className="required-indicator">required</span></label>
@@ -294,26 +413,79 @@ export default function ServicesAdminPage() {
               </div>
             </div>
 
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Location</label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="e.g., Pasir Panjang Hill Brethren Church"
-                />
-              </div>
-              <div className="form-group">
-                <label>Display Order</label>
-                <input
-                  type="number"
-                  value={formData.displayOrder}
-                  onChange={(e) => setFormData({ ...formData, displayOrder: Number(e.target.value) })}
-                />
-              </div>
+            {/* Location Fields */}
+            <div className="form-group">
+              <label>Location</label>
+              <input
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="e.g., Pasir Panjang Hill Brethren Church"
+              />
             </div>
 
+            {/* Region (conditional) */}
+            {((formData.serviceCategory as string) === SERVICE_CATEGORIES.PRAYER || 
+              (formData.serviceCategory as string) === SERVICE_CATEGORIES.FELLOWSHIP || 
+              (formData.serviceCategory as string) === SERVICE_CATEGORIES.WORSHIP) && (
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>
+                    Region
+                    {isRegionRequiredForCategory(formData.serviceCategory as any) && (
+                      <span className="required-indicator"> *required</span>
+                    )}
+                  </label>
+                  <select
+                    value={formData.region}
+                    onChange={(e) => handleRegionChange(e.target.value)}
+                  >
+                    <option value={REGIONS.SINGAPORE}>{REGION_LABELS.SINGAPORE}</option>
+                    <option value={REGIONS.INDIA}>{REGION_LABELS.INDIA}</option>
+                  </select>
+                </div>
+
+                {/* Branch (conditional) */}
+                <div className="form-group">
+                  <label>Branch</label>
+                  <select
+                    value={formData.branchId}
+                    onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
+                  >
+                    <option value="">None</option>
+                    {filteredBranches.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.branchName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Fellowship Group (conditional) */}
+            {((formData.serviceCategory as string) === SERVICE_CATEGORIES.FELLOWSHIP) && (
+              <div className="form-group">
+                <label>
+                  Fellowship Group *
+                  <span className="required-indicator">required</span>
+                </label>
+                <select
+                  value={formData.fellowshipGroup}
+                  onChange={(e) => setFormData({ ...formData, fellowshipGroup: e.target.value })}
+                >
+                  <option value="">Select a group</option>
+                  <option value={FELLOWSHIP_GROUPS.WOMEN_FELLOWSHIP}>
+                    {FELLOWSHIP_GROUP_LABELS.WOMEN_FELLOWSHIP}
+                  </option>
+                  <option value={FELLOWSHIP_GROUPS.DOR_BROTHERS}>
+                    {FELLOWSHIP_GROUP_LABELS.DOR_BROTHERS}
+                  </option>
+                </select>
+              </div>
+            )}
+
+            {/* Status */}
             <div className="form-group">
               <label>Status * <span className="required-indicator">required</span></label>
               <select
@@ -325,6 +497,7 @@ export default function ServicesAdminPage() {
               </select>
             </div>
 
+            {/* Form Actions */}
             <div className="form-actions">
               <button type="submit" className="btn btn-primary" disabled={submitting}>
                 {submitting ? 'Saving...' : editing ? 'Update Service' : 'Create Service'}
@@ -340,49 +513,73 @@ export default function ServicesAdminPage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280' }}>Loading services...</div>
       ) : services.length > 0 ? (
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Day</th>
-                <th>Time</th>
-                <th>Timezone</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {services.map((service) => (
-                <tr key={service.id}>
-                  <td><strong>{service.title}</strong></td>
-                  <td>{service.category}</td>
-                  <td>{service.dayOfWeek}</td>
-                  <td>{service.startTime}{service.endTime ? ` – ${service.endTime}` : ''}</td>
-                  <td>{TIMEZONE_LABELS[service.timezone] || service.timezone}</td>
-                  <td>{service.location || '—'}</td>
-                  <td>
-                    <span className={`status-badge status-${service.status}`}>
-                      {service.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="actions">
-                      <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(service)}>
-                        Edit
-                      </button>
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(service.id)}>
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Day</th>
+                  <th>Time</th>
+                  <th>Timezone</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {paginatedServices.map((service) => (
+                  <tr key={service.id}>
+                    <td><strong>{service.title}</strong></td>
+                    <td>{service.serviceCategory ? SERVICE_CATEGORY_LABELS[service.serviceCategory as ServiceCategory] : service.category}</td>
+                    <td>{service.dayOfWeek}</td>
+                    <td>{service.startTime}{service.endTime ? ` – ${service.endTime}` : ''}</td>
+                    <td>{TIMEZONE_LABELS[service.timezone] || service.timezone}</td>
+                    <td>
+                      <span className={`status-badge status-${service.status}`}>
+                        {service.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="actions">
+                        <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(service)}>
+                          Edit
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(service.id)}>
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {showPagination && (
+            <div className="pagination-container">
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage((p) => p - 1)}
+                disabled={currentPage === 0}
+                aria-label="Previous page"
+              >
+                ← Previous
+              </button>
+              <span className="pagination-info">
+                Page {currentPage + 1} of {pageCount}
+              </span>
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage((p) => p + 1)}
+                disabled={currentPage >= pageCount - 1}
+                aria-label="Next page"
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280' }}>
           No services yet. Create one to get started.
@@ -390,7 +587,7 @@ export default function ServicesAdminPage() {
       )}
 
       <style>{`
-        .admin-page { padding: 0; }
+        .admin-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
         
         .page-header { 
           display: flex; 
@@ -416,7 +613,7 @@ export default function ServicesAdminPage() {
         .alert-error { background-color: #fee2e2; border: 1px solid #fecaca; color: #dc2626; }
         .alert-success { background-color: #dcfce7; border: 1px solid #bbf7d0; color: #15803d; }
         
-        .table-container { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; }
+        .table-container { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; margin-bottom: 1.5rem; }
         table { width: 100%; border-collapse: collapse; }
         th { background-color: #f3f4f6; padding: 1rem; text-align: left; font-weight: 600; color: #0B1F3A; border-bottom: 2px solid #e5e7eb; }
         td { padding: 1rem; border-bottom: 1px solid #e5e7eb; }
@@ -439,6 +636,47 @@ export default function ServicesAdminPage() {
         
         .form-actions { display: flex; gap: 1rem; margin-top: 2rem; }
         .form-actions button { flex: 1; }
+
+        .pagination-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1.5rem;
+          padding: 1.5rem;
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .pagination-btn {
+          padding: 0.75rem 1.5rem;
+          background-color: #C9A227;
+          color: #0B1F3A;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+          background-color: #E0B644;
+          transform: translateY(-2px);
+        }
+
+        .pagination-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .pagination-info {
+          font-size: 0.95rem;
+          color: #6B7280;
+          font-weight: 500;
+          min-width: 120px;
+          text-align: center;
+        }
       `}</style>
     </div>
   );

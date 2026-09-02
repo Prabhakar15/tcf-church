@@ -75,6 +75,27 @@ export interface RecurringService {
   location?: string;
   displayOrder: number;
   status: 'draft' | 'published';
+  
+  // New service classification fields
+  serviceCategory?: 'WORSHIP' | 'PRAYER' | 'FELLOWSHIP';
+  region?: 'SINGAPORE' | 'INDIA';
+  fellowshipGroup?: 'WOMEN_FELLOWSHIP' | 'DOR_BROTHERS';
+  branchId?: string;
+  
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Branch (location/region presence)
+export interface Branch {
+  id: string;
+  region: 'SINGAPORE' | 'INDIA';
+  branchName: string;
+  location?: string;
+  address?: string;
+  mapUrl?: string;
+  displayOrder: number;
+  status: 'draft' | 'published';
   createdAt?: string;
   updatedAt?: string;
 }

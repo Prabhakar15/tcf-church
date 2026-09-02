@@ -3,6 +3,7 @@ import type { Sermon } from '../../types';
 import { getAllSermons, createSermon, updateSermon, deleteSermon } from '../../lib/queries/sermons';
 import { extractYouTubeVideoId } from '../../lib/youtubeUtils';
 import YouTubeEmbed from '../../components/youtube/YouTubeEmbed';
+import AdminBackNav from '../../components/admin/AdminBackNav';
 
 type FormStatus = 'draft' | 'published';
 
@@ -162,6 +163,7 @@ export default function SermonsAdminPage() {
 
   return (
     <div className="admin-page">
+      <AdminBackNav pageTitle="Sermons" />
       <style>{`
         .admin-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }

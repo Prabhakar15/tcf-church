@@ -7,7 +7,6 @@ interface ServiceGroup {
   groupName: string;
   sectionTitle: string;
   services: RecurringService[];
-  isSpecial?: boolean;
 }
 
 export default function ServicesPage() {
@@ -23,7 +22,7 @@ export default function ServicesPage() {
         const data = await getPublishedServices();
         groupServices(data);
       } catch (err) {
-        setError('Unable to load services. Please try again later.');
+        setError('Unable to load services at this time.');
         console.error(err);
       } finally {
         setLoading(false);
@@ -68,49 +67,34 @@ export default function ServicesPage() {
       });
     }
 
-    // Early Morning Prayer - Group by timezone
-    const prayerServices = allServices.filter(s => s.category === 'Early Morning Prayer');
-    if (prayerServices.length > 0) {
-      const singaporePrayer = prayerServices.filter(s => s.timezone === 'Asia/Singapore');
-      const indiaPrayer = prayerServices.filter(s => s.timezone === 'Asia/Kolkata');
+    // Early Morning Prayer - Singapore
+    const singaporePrayer = allServices.filter(s => 
+      s.category === 'Early Morning Prayer' && s.timezone === 'Asia/Singapore'
+    );
+    if (singaporePrayer.length > 0) {
+      groups.push({
+        groupName: 'prayer-sg',
+        sectionTitle: 'Early Morning Prayer - Singapore',
+        services: singaporePrayer.sort((a, b) => {
+          const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+          return dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
+        })
+      });
+    }
 
-      if (singaporePrayer.length > 0) {
-        groups.push({
-          groupName: 'prayer-sg',
-          sectionTitle: 'Early Morning Prayer - Singapore',
-          services: [{
-            id: 'prayer-sg-group',
-            title: 'Tuesday – Friday',
-            category: 'Early Morning Prayer',
-            dayOfWeek: 'Tuesday',
-            startTime: singaporePrayer[0].startTime,
-            endTime: singaporePrayer[0].endTime,
-            timezone: 'Asia/Singapore',
-            status: 'published',
-            displayOrder: singaporePrayer[0].displayOrder
-          }],
-          isSpecial: true
-        });
-      }
-
-      if (indiaPrayer.length > 0) {
-        groups.push({
-          groupName: 'prayer-in',
-          sectionTitle: 'Early Morning Prayer - India',
-          services: [{
-            id: 'prayer-in-group',
-            title: 'Tuesday – Friday',
-            category: 'Early Morning Prayer',
-            dayOfWeek: 'Tuesday',
-            startTime: indiaPrayer[0].startTime,
-            endTime: indiaPrayer[0].endTime,
-            timezone: 'Asia/Kolkata',
-            status: 'published',
-            displayOrder: indiaPrayer[0].displayOrder
-          }],
-          isSpecial: true
-        });
-      }
+    // Early Morning Prayer - India
+    const indiaPrayer = allServices.filter(s => 
+      s.category === 'Early Morning Prayer' && s.timezone === 'Asia/Kolkata'
+    );
+    if (indiaPrayer.length > 0) {
+      groups.push({
+        groupName: 'prayer-in',
+        sectionTitle: 'Early Morning Prayer - India',
+        services: indiaPrayer.sort((a, b) => {
+          const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+          return dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
+        })
+      });
     }
 
     setServiceGroups(groups);
@@ -128,43 +112,44 @@ export default function ServicesPage() {
       <section className="page-content">
         <div className="page-container">
           {loading ? (
-            <div className="loading">Loading services...</div>
+            <div className="loading">
+              <div className="loading-spinner" />
+              <p>Loading services...</p>
+            </div>
           ) : error ? (
             <div className="error-state">
               <p>{error}</p>
+              <button 
+                className="retry-button"
+                onClick={() => window.location.reload()}
+              >
+                Try Again
+              </button>
             </div>
           ) : serviceGroups.length > 0 ? (
             <div className="services-sections">
               {serviceGroups.map((group) => (
                 <div key={group.groupName} className="services-section">
                   <h2 className="section-title">{group.sectionTitle}</h2>
-                  <div className={group.isSpecial ? "services-special" : "services-grid"}>
+                  <div className="services-grid">
                     {group.services.map((service) => (
                       <div key={service.id} className="service-card">
                         <h3>{service.title}</h3>
-                        {group.isSpecial ? (
-                          <>
-                            <p className="service-time">
-                              <strong>{service.title}</strong>
-                            </p>
-                            <p className="service-hours">
-                              {formatServiceSchedule(service.startTime, service.endTime, service.timezone)}
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="service-time">
-                              <strong>Every {service.dayOfWeek}</strong>
-                            </p>
-                            <p className="service-hours">
-                              {formatServiceSchedule(service.startTime, service.endTime, service.timezone)}
-                            </p>
-                          </>
-                        )}
-                        {service.location && (
+                        <p className="service-day">
+                          <strong>Every {service.dayOfWeek}</strong>
+                        </p>
+                        <p className="service-hours">
+                          {formatServiceSchedule(service.startTime, service.endTime, service.timezone)}
+                        </p>
+                        {service.location ? (
                           <p className="service-location">
                             <span className="location-icon">📍</span>
                             {service.location}
+                          </p>
+                        ) : (
+                          <p className="service-location empty">
+                            <span className="location-icon">📍</span>
+                            Location to be announced
                           </p>
                         )}
                       </div>
@@ -175,7 +160,7 @@ export default function ServicesPage() {
             </div>
           ) : (
             <div className="empty-state">
-              <p>No services available at the moment.</p>
+              <p>No services are currently available.</p>
             </div>
           )}
         </div>
@@ -204,54 +189,180 @@ export default function ServicesPage() {
 
       <style>{`
         .services-page { width: 100%; }
-        .page-header { background-color: #0B1F3A; color: white; padding: 4rem 1.5rem; text-align: center; }
-        @media (max-width: 767px) { .page-header { padding: 2rem 1rem; } }
-        .page-header-container { max-width: 1280px; margin: 0 auto; }
-        .page-header h1 { font-size: 3rem; font-weight: 800; margin: 0; }
-        @media (max-width: 767px) { .page-header h1 { font-size: 2rem; } }
-        .page-header p { font-size: 1.125rem; color: #E5E7EB; margin: 0.5rem 0 0 0; }
+        
+        .page-header { 
+          background-color: #0B1F3A; 
+          color: white; 
+          padding: 5rem 1.5rem; 
+        }
+        @media (max-width: 767px) { .page-header { padding: 3rem 1rem; } }
+        
+        .page-header-container { 
+          max-width: 1280px; 
+          margin: 0 auto;
+          text-align: center;
+        }
+        
+        .page-header h1 { 
+          font-size: 3rem; 
+          font-weight: 800; 
+          margin: 0; 
+          letter-spacing: -0.02em;
+        }
+        @media (max-width: 767px) { 
+          .page-header h1 { 
+            font-size: 2rem;
+          } 
+        }
+        
+        .page-header p { 
+          font-size: 1.125rem; 
+          color: #E5E7EB; 
+          margin: 0.75rem 0 0 0;
+          line-height: 1.6;
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+        }
         
         .page-content { padding: 4rem 1.5rem; background-color: #ffffff; }
         @media (max-width: 767px) { .page-content { padding: 2rem 1rem; } }
         .page-container { max-width: 1000px; margin: 0 auto; }
         
-        .loading { text-align: center; padding: 2rem; color: #6B7280; }
-        .error-state { background-color: #fee2e2; border: 1px solid #fecaca; color: #dc2626; padding: 1.5rem; border-radius: 12px; text-align: center; }
-        .error-state p { margin: 0; }
+        .loading { 
+          text-align: center; 
+          padding: 4rem 2rem; 
+          color: #6B7280;
+        }
+        
+        .loading-spinner {
+          display: inline-block;
+          width: 40px;
+          height: 40px;
+          border: 4px solid #e5e7eb;
+          border-top-color: #C9A227;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+          margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        
+        .error-state { 
+          background-color: #fee2e2; 
+          border: 1px solid #fecaca; 
+          color: #dc2626; 
+          padding: 2rem; 
+          border-radius: 12px; 
+          text-align: center;
+        }
+        .error-state p { margin: 0 0 1rem 0; }
+        
+        .retry-button {
+          padding: 0.75rem 1.5rem;
+          background-color: #dc2626;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        
+        .retry-button:hover {
+          background-color: #b91c1c;
+          transform: translateY(-2px);
+        }
         
         .services-sections { display: flex; flex-direction: column; gap: 3rem; }
         
         .services-section { }
-        .section-title { font-size: 1.75rem; font-weight: 700; color: #0B1F3A; margin: 0 0 1.5rem 0; border-bottom: 3px solid #C9A227; padding-bottom: 0.75rem; }
+        .section-title { 
+          font-size: 1.75rem; 
+          font-weight: 700; 
+          color: #0B1F3A; 
+          margin: 0 0 1.5rem 0; 
+          border-bottom: 4px solid #C9A227; 
+          padding-bottom: 0.75rem;
+          text-align: left;
+        }
         
-        .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
-        .services-special { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
+        .services-grid { 
+          display: grid; 
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+          gap: 1.5rem; 
+        }
         @media (max-width: 767px) { 
           .services-grid { grid-template-columns: 1fr; } 
-          .services-special { grid-template-columns: 1fr; }
         }
         
         .service-card { 
           padding: 1.5rem; 
-          border: 2px solid #e5e7eb; 
+          border: 1px solid #e5e7eb;
+          border-top: 4px solid #C9A227;
           border-radius: 12px; 
           background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
           transition: all 0.3s ease;
           box-shadow: 0 2px 8px rgba(11, 31, 58, 0.08);
         }
-        .service-card:hover { border-color: #C9A227; box-shadow: 0 8px 20px rgba(201, 162, 39, 0.15); }
+        .service-card:hover { 
+          border-color: #C9A227;
+          border-top: 4px solid #C9A227;
+          box-shadow: 0 8px 20px rgba(201, 162, 39, 0.15); 
+          transform: translateY(-2px);
+        }
         
-        .service-card h3 { font-size: 1.25rem; font-weight: 700; color: #0B1F3A; margin: 0 0 1rem 0; }
-        .service-time { font-weight: 600; color: #0B1F3A; margin: 0 0 0.5rem 0; font-size: 0.95rem; }
-        .service-hours { font-size: 0.9rem; color: #6B7280; margin: 0 0 0.75rem 0; }
+        .service-card h3 { 
+          font-size: 1.25rem; 
+          font-weight: 700; 
+          color: #0B1F3A; 
+          margin: 0 0 1rem 0; 
+        }
+        .service-day { 
+          font-weight: 600; 
+          color: #0B1F3A; 
+          margin: 0 0 0.5rem 0; 
+          font-size: 0.95rem; 
+        }
+        .service-hours { 
+          font-size: 0.9rem; 
+          color: #6B7280; 
+          margin: 0 0 0.75rem 0; 
+        }
         
-        .service-location { font-size: 0.9rem; color: #6B7280; margin: 0.75rem 0 0 0; display: flex; align-items: center; gap: 0.5rem; }
+        .service-location { 
+          font-size: 0.9rem; 
+          color: #6B7280; 
+          margin: 0.75rem 0 0 0; 
+          display: flex; 
+          align-items: center; 
+          gap: 0.5rem; 
+        }
+        .service-location.empty {
+          color: #9CA3AF;
+          font-style: italic;
+        }
         .location-icon { font-size: 1.1rem; }
         
-        .empty-state { text-align: center; padding: 4rem 2rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; }
-        .empty-state p { font-size: 1.125rem; color: #6B7280; margin: 0; }
+        .empty-state { 
+          text-align: center; 
+          padding: 4rem 2rem; 
+          background-color: #f9fafb; 
+          border: 1px solid #e5e7eb; 
+          border-radius: 12px; 
+        }
+        .empty-state p { 
+          font-size: 1.125rem; 
+          color: #6B7280; 
+          margin: 0; 
+        }
         
-        .music-section { background: linear-gradient(135deg, #0B1F3A 0%, #1a3a52 100%); padding: 4rem 1.5rem; }
+        .music-section { 
+          background: linear-gradient(135deg, #0B1F3A 0%, #1a3a52 100%); 
+          padding: 4rem 1.5rem; 
+        }
         @media (max-width: 767px) { .music-section { padding: 2rem 1rem; } }
         
         .music-container { max-width: 1000px; margin: 0 auto; }
@@ -264,8 +375,17 @@ export default function ServicesPage() {
           backdrop-filter: blur(10px);
         }
         
-        .music-content h2 { font-size: 2rem; font-weight: 700; color: #C9A227; margin: 0 0 0.75rem 0; }
-        .music-content p { font-size: 1.1rem; color: #E5E7EB; margin: 0 0 1.5rem 0; }
+        .music-content h2 { 
+          font-size: 2rem; 
+          font-weight: 700; 
+          color: #C9A227; 
+          margin: 0 0 0.75rem 0; 
+        }
+        .music-content p { 
+          font-size: 1.1rem; 
+          color: #E5E7EB; 
+          margin: 0 0 1.5rem 0; 
+        }
         
         .music-button {
           display: inline-flex;
@@ -280,6 +400,8 @@ export default function ServicesPage() {
           text-decoration: none;
           transition: all 0.3s ease;
           box-shadow: 0 4px 15px rgba(201, 162, 39, 0.3);
+          border: none;
+          cursor: pointer;
         }
         .music-button:hover { 
           transform: translateY(-2px);

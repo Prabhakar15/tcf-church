@@ -3,7 +3,11 @@
 -- ============================================================================
 -- This script seeds the initial service data for the TCF website.
 -- Run this in Supabase SQL Editor after the migration is applied.
+-- Idempotent: Safe to run multiple times (existing records not duplicated)
 -- ============================================================================
+
+-- First, delete existing services to ensure clean state
+DELETE FROM public.services WHERE display_order BETWEEN 1 AND 15;
 
 INSERT INTO public.services (
   title, category, day_of_week, start_time, end_time, 

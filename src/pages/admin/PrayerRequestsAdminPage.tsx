@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { PrayerRequest } from '../../types';
 import { getPrayerRequests, updatePrayerRequestStatus, deletePrayerRequest } from '../../lib/queries/prayerRequests';
+import AdminBackNav from '../../components/admin/AdminBackNav';
 
 export default function PrayerRequestsAdminPage() {
   const [requests, setRequests] = useState<PrayerRequest[]>([]);
@@ -68,6 +69,7 @@ export default function PrayerRequestsAdminPage() {
 
   return (
     <div className="admin-page">
+      <AdminBackNav pageTitle="Prayer Requests" />
       <style>{`
         .admin-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }

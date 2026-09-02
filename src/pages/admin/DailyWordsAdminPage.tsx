@@ -3,6 +3,7 @@ import type { DailyWord } from '../../types';
 import { getAllDailyWords, createDailyWord, updateDailyWord, deleteDailyWord } from '../../lib/queries/dailyWords';
 import { extractYouTubeVideoId } from '../../lib/youtubeUtils';
 import YouTubeEmbed from '../../components/youtube/YouTubeEmbed';
+import AdminBackNav from '../../components/admin/AdminBackNav';
 
 type FormStatus = 'draft' | 'published';
 
@@ -188,6 +189,7 @@ export default function DailyWordsAdminPage() {
 
   return (
     <div className="admin-page">
+      <AdminBackNav pageTitle="Daily Words" />
       <style>{`
         .admin-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }

@@ -19,6 +19,7 @@ import EventsAdminPage from './pages/admin/EventsAdminPage';
 import ServicesAdminPage from './pages/admin/ServicesAdminPage';
 import SermonsAdminPage from './pages/admin/SermonsAdminPage';
 import PrayerRequestsAdminPage from './pages/admin/PrayerRequestsAdminPage';
+import BranchesAdminPage from './pages/admin/BranchesAdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -86,6 +87,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PrayerRequestsAdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="admin/branches"
+            element={
+              <ProtectedRoute>
+                <BranchesAdminPage />
               </ProtectedRoute>
             }
           />
