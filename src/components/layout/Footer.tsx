@@ -1,8 +1,32 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { churchData } from '../../data/church';
+import { getPublishedServices } from '../../lib/queries/services';
+import type { RecurringService } from '../../types';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [worshipServices, setWorshipServices] = useState<RecurringService[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        const services = await getPublishedServices();
+        // Filter to only Worship services (Sunday/Saturday)
+        const worship = services.filter(s => s.serviceCategory === 'WORSHIP');
+        setWorshipServices(worship);
+      } catch (err) {
+        console.error('Error loading worship services for footer:', err);
+        // Fallback to empty array - worship times section will show placeholder
+        setWorshipServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadServices();
+  }, []);
 
   return (
     <footer style={{ backgroundColor: '#0B1F3A', color: 'white', marginTop: 'auto', width: '100%' }}>
@@ -63,33 +87,34 @@ export default function Footer() {
           </nav>
         </div>
 
-        {/* Services */}
+        {/* Worship Services (from database) */}
         <div>
           <h4 style={{ fontWeight: '600', marginBottom: '1rem', color: '#C9A227' }}>Worship Times</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {churchData.services.map((service) => (
-              <div key={service.id} style={{ padding: '1rem', backgroundColor: 'rgba(201, 162, 39, 0.1)', borderLeft: '3px solid #C9A227', borderRadius: '0.375rem', transition: 'all 0.3s ease', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.2)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(201, 162, 39, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '1.5rem' }}>📅</span>
-                  <p style={{ fontWeight: '700', color: 'white', fontSize: '1rem', margin: 0 }}>{service.day}</p>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '1rem' }}>⏰</span>
-                  <p style={{ color: '#C9A227', fontSize: '0.875rem', fontWeight: '600', margin: 0 }}>{service.time} {service.timezone}</p>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '1rem', marginTop: '0.125rem' }}>📍</span>
-                  <div>
-                    <p style={{ color: '#d1d5db', fontSize: '0.875rem', fontWeight: '500', margin: 0 }}>{service.venue}</p>
-                    <p style={{ color: '#9ca3af', fontSize: '0.75rem', margin: '0.25rem 0 0 0' }}>{service.address}</p>
+            {loading ? (
+              <p style={{ fontSize: '0.875rem', color: '#d1d5db' }}>Loading...</p>
+            ) : worshipServices.length > 0 ? (
+              worshipServices.map((service) => (
+                <div key={service.id} style={{ padding: '1rem', backgroundColor: 'rgba(201, 162, 39, 0.1)', borderLeft: '3px solid #C9A227', borderRadius: '0.375rem', transition: 'all 0.3s ease', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.2)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(201, 162, 39, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '1.5rem' }}>📅</span>
+                    <p style={{ fontWeight: '700', color: 'white', fontSize: '1rem', margin: 0 }}>{service.dayOfWeek}</p>
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '1rem' }}>⏰</span>
+                    <p style={{ color: '#C9A227', fontSize: '0.875rem', fontWeight: '600', margin: 0 }}>{service.startTime} {service.timezone}</p>
+                  </div>
+                  {service.location && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '1rem', marginTop: '0.125rem' }}>📍</span>
+                      <p style={{ color: '#d1d5db', fontSize: '0.875rem', fontWeight: '500', margin: 0 }}>{service.location}</p>
+                    </div>
+                  )}
                 </div>
-                <a href={service.mapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.75rem', fontSize: '0.75rem', color: '#C9A227', textDecoration: 'none', fontWeight: '500', padding: '0.375rem 0.75rem', backgroundColor: 'rgba(201, 162, 39, 0.15)', borderRadius: '0.25rem', transition: 'all 0.3s ease' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.3)'; e.currentTarget.style.transform = 'translateX(2px)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.15)'; e.currentTarget.style.transform = 'translateX(0)'; }}>
-                  <span>🗺️</span>
-                  <span>View on Maps</span>
-                </a>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p style={{ fontSize: '0.875rem', color: '#d1d5db' }}>Check Services page for all worship times</p>
+            )}
           </div>
         </div>
 

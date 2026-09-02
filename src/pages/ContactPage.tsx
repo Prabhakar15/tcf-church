@@ -1,6 +1,30 @@
-import { churchData, socialLinks } from '../data/church';
+import { useState, useEffect } from 'react';
+import { socialLinks } from '../data/church';
+import { getPublishedServices } from '../lib/queries/services';
+import type { RecurringService } from '../types';
 
 export default function ContactPage() {
+  const [worshipServices, setWorshipServices] = useState<RecurringService[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        const services = await getPublishedServices();
+        // Filter to only Worship services (Sunday/Saturday)
+        const worship = services.filter(s => s.serviceCategory === 'WORSHIP');
+        setWorshipServices(worship);
+      } catch (err) {
+        console.error('Error loading worship services:', err);
+        setWorshipServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadServices();
+  }, []);
+
   return (
     <div className="contact-page">
       <section className="page-header">
@@ -15,15 +39,19 @@ export default function ContactPage() {
           <div className="contact-grid">
             <div className="contact-section">
               <h2>Service Times & Locations</h2>
-              {churchData.services.map((service) => (
-                <div key={service.id} className="service-info">
-                  <h3>{service.day}</h3>
-                  <p className="time">{service.time} {service.timezone}</p>
-                  <p className="venue">{service.venue}</p>
-                  <p className="address">{service.address}</p>
-                  <a href={service.mapsUrl} target="_blank" rel="noopener noreferrer" className="map-link">Get Directions</a>
-                </div>
-              ))}
+              {loading ? (
+                <p>Loading service times...</p>
+              ) : worshipServices.length > 0 ? (
+                worshipServices.map((service) => (
+                  <div key={service.id} className="service-info">
+                    <h3>{service.dayOfWeek} Service</h3>
+                    <p className="time">{service.startTime} {service.timezone}</p>
+                    {service.location && <p className="venue">{service.location}</p>}
+                  </div>
+                ))
+              ) : (
+                <p>Service times not available. Please check the Services page.</p>
+              )}
             </div>
 
             <div className="contact-section">
@@ -53,8 +81,6 @@ export default function ContactPage() {
         .service-info h3 { font-size: 1.125rem; font-weight: 700; color: #0B1F3A; margin: 0 0 0.5rem 0; }
         .time { font-weight: 600; color: #C9A227; margin: 0 0 0.5rem 0; }
         .venue { font-weight: 600; color: #0B1F3A; margin: 0; }
-        .address { font-size: 0.95rem; color: #6B7280; margin: 0.25rem 0; }
-        .map-link { color: #C9A227; text-decoration: none; font-weight: 600; display: inline-block; margin-top: 0.5rem; }
         .contact-section p { font-size: 1rem; color: #6B7280; line-height: 1.6; }
         .social-links { display: flex; gap: 2rem; margin-top: 1.5rem; }
         .social-links a { color: #0B1F3A; text-decoration: none; font-weight: 600; transition: color 0.3s ease; }

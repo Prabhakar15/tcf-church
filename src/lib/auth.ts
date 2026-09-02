@@ -93,13 +93,28 @@ export async function getCurrentAdmin(): Promise<AdminProfile | null> {
 
 /**
  * Listen to auth changes
+ * Handles all Supabase auth events properly:
+ * - SIGNED_IN: user logged in, fetch admin profile
+ * - INITIAL_SESSION: existing session loaded, fetch admin profile
+ * - TOKEN_REFRESHED: session still valid, keep admin logged in
+ * - SIGNED_OUT: user logged out, clear admin state
+ * - USER_UPDATED: user updated but still authenticated, keep logged in
  */
 export function onAuthStateChange(callback: (user: AdminProfile | null) => void) {
   return supabase.auth.onAuthStateChange(async (event, session) => {
-    if (session && event === 'SIGNED_IN') {
-      const admin = await getCurrentAdmin();
-      callback(admin);
+    if (session) {
+      // User has an active session
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        // Load admin profile on login or initial session
+        const admin = await getCurrentAdmin();
+        callback(admin);
+      } else if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        // Session is still valid, keep user authenticated
+        const admin = await getCurrentAdmin();
+        callback(admin);
+      }
     } else {
+      // No session, user is logged out
       callback(null);
     }
   });

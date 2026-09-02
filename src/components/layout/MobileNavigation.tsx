@@ -6,7 +6,7 @@ const navItems = [
   { label: 'Services', path: '/services' },
   { label: 'Branches', path: '/branches' },
   { label: 'Daily Word', path: '/daily-word' },
-  { label: 'Media', path: '/media' },
+  { label: 'Media', path: '/sermons' },
   { label: 'Events', path: '/events' },
   { label: 'Contact', path: '/contact' },
 ];
