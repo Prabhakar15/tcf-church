@@ -21,6 +21,7 @@ import ServicesAdminPage from './pages/admin/ServicesAdminPage';
 import SermonsAdminPage from './pages/admin/SermonsAdminPage';
 import PrayerRequestsAdminPage from './pages/admin/PrayerRequestsAdminPage';
 import BranchesAdminPage from './pages/admin/BranchesAdminPage';
+import TestimoniesAdminPage from "./pages/admin/TestimoniesAdminPage";
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -101,6 +102,14 @@ function App() {
             }
           />
 
+          <Route
+            path="admin/testimonies"
+            element={
+              <ProtectedRoute>
+                <TestimoniesAdminPage />
+              </ProtectedRoute>
+            }
+          />
           {/* Catch all */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
