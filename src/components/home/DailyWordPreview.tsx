@@ -1,8 +1,30 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getTodaysDailyWord } from '../../data/mock/dailyWord';
+import { getTodaysDailyWord } from '../../lib/queries/dailyWords';
+import type { DailyWord } from '../../types';
 
 export default function DailyWordPreview() {
-  const todayWord = getTodaysDailyWord();
+  const [todayWord, setTodayWord] = useState<DailyWord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const loadDailyWord = async () => {
+      setLoading(true);
+      setError(false);
+      try {
+        const word = await getTodaysDailyWord();
+        setTodayWord(word);
+      } catch (err) {
+        console.error('Error loading Daily Word:', err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDailyWord();
+  }, []);
 
   return (
     <section className="daily-word-preview">
@@ -14,34 +36,46 @@ export default function DailyWordPreview() {
         </div>
 
         {/* Content Card */}
-        <div className="daily-word-card">
-          {/* Scripture Reference */}
-          <p className="scripture-ref">{todayWord.scriptureReference}</p>
+        {loading ? (
+          <div className="daily-word-card daily-word-loading">
+            <p>Loading today's Daily Word...</p>
+          </div>
+        ) : error || !todayWord ? (
+          <div className="daily-word-card daily-word-empty">
+            <p>No Daily Word available at the moment. Please check back soon.</p>
+          </div>
+        ) : (
+          <>
+            <div className="daily-word-card">
+              {/* Scripture Reference */}
+              <p className="scripture-ref">{todayWord.scriptureReference}</p>
 
-          {/* Title */}
-          <h3 className="daily-word-title">{todayWord.title}</h3>
+              {/* Title */}
+              <h3 className="daily-word-title">{todayWord.title}</h3>
 
-          {/* Verse */}
-          <blockquote className="bible-verse">
-            &ldquo;{todayWord.bibleVerse}&rdquo;
-          </blockquote>
+              {/* Verse */}
+              <blockquote className="bible-verse">
+                &ldquo;{todayWord.bibleVerse}&rdquo;
+              </blockquote>
 
-          {/* Message */}
-          <p className="daily-word-message">{todayWord.message}</p>
+              {/* Message */}
+              <p className="daily-word-message">{todayWord.message}</p>
 
-          {/* Divider */}
-          <div className="daily-word-preview-divider"></div>
+              {/* Divider */}
+              <div className="daily-word-preview-divider"></div>
 
-          {/* CTA */}
-          <Link to="/daily-word" className="daily-word-read-btn">
-            Read Full Daily Word
-          </Link>
-        </div>
+              {/* CTA */}
+              <Link to="/daily-word" className="daily-word-read-btn">
+                Read Full Daily Word
+              </Link>
+            </div>
 
-        {/* Quote attribution */}
-        <div className="daily-word-footer">
-          <p>New word daily &middot; Encouraging your faith journey</p>
-        </div>
+            {/* Quote attribution */}
+            <div className="daily-word-footer">
+              <p>New word daily &middot; Encouraging your faith journey</p>
+            </div>
+          </>
+        )}
       </div>
 
       <style>{`
@@ -104,6 +138,13 @@ export default function DailyWordPreview() {
           .daily-word-card {
             padding: 2rem 1.5rem;
           }
+        }
+
+        .daily-word-loading,
+        .daily-word-empty {
+          text-align: center;
+          color: #6B7280;
+          font-size: 1rem;
         }
 
         .scripture-ref {
