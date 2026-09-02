@@ -115,29 +115,34 @@ ON CONFLICT (region, branch_name) DO NOTHING;
 ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
 
 -- Public: read only published branches
-CREATE POLICY IF NOT EXISTS "branches_public_read"
+DROP POLICY IF EXISTS "branches_public_read" ON public.branches;
+CREATE POLICY "branches_public_read"
   ON public.branches
   FOR SELECT
   USING (status = 'published');
 
 -- Admins: full CRUD access
-CREATE POLICY IF NOT EXISTS "branches_admin_create"
+DROP POLICY IF EXISTS "branches_admin_create" ON public.branches;
+CREATE POLICY "branches_admin_create"
   ON public.branches
   FOR INSERT
   WITH CHECK (public.is_admin());
 
-CREATE POLICY IF NOT EXISTS "branches_admin_read"
+DROP POLICY IF EXISTS "branches_admin_read" ON public.branches;
+CREATE POLICY "branches_admin_read"
   ON public.branches
   FOR SELECT
   USING (public.is_admin());
 
-CREATE POLICY IF NOT EXISTS "branches_admin_update"
+DROP POLICY IF EXISTS "branches_admin_update" ON public.branches;
+CREATE POLICY "branches_admin_update"
   ON public.branches
   FOR UPDATE
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
 
-CREATE POLICY IF NOT EXISTS "branches_admin_delete"
+DROP POLICY IF EXISTS "branches_admin_delete" ON public.branches;
+CREATE POLICY "branches_admin_delete"
   ON public.branches
   FOR DELETE
   USING (public.is_admin());
