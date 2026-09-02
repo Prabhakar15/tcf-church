@@ -155,3 +155,27 @@ export interface PrayerRequestForm {
   prayerRequest: string;
   contactRequested: boolean;
 }
+
+// Testimony (personal story of God's faithfulness)
+export interface Testimony {
+  id: string;
+  title: string;
+  content: string;
+  submittedName: string;
+  displayPreference: 'FULL_NAME' | 'FIRST_NAME_ONLY' | 'ANONYMOUS';
+  branchId?: string;
+  status: 'draft' | 'published' | 'rejected';
+  displayOrder: number;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Testimony Form (what public users submit)
+export interface TestimonyForm {
+  title: string;
+  content: string;
+  submittedName: string;
+  displayPreference: 'FULL_NAME' | 'FIRST_NAME_ONLY' | 'ANONYMOUS';
+  branchId?: string;
+}
