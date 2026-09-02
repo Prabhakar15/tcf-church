@@ -23,9 +23,10 @@ export default function Header() {
   const navLinks = [
     { label: 'Home', path: '/' },
     { label: 'About', path: '/about' },
-    { label: 'Daily Word', path: '/daily-word' },
-    { label: 'Sermons', path: '/sermons' },
     { label: 'Services', path: '/services' },
+    { label: 'Branches', path: '/branches' },
+    { label: 'Daily Word', path: '/daily-word' },
+    { label: 'Media', path: '/media' },
     { label: 'Events', path: '/events' },
     { label: 'Contact', path: '/contact' },
   ];
