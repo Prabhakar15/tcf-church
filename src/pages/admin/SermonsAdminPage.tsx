@@ -4,6 +4,10 @@ import { getAllSermons, createSermon, updateSermon, deleteSermon } from '../../l
 import { extractYouTubeVideoId } from '../../lib/youtubeUtils';
 import YouTubeEmbed from '../../components/youtube/YouTubeEmbed';
 import AdminBackNav from '../../components/admin/AdminBackNav';
+import { usePagination } from '../../hooks/usePagination';
+import PaginationControls from '../../components/admin/PaginationControls';
+
+const SERMONS_PER_PAGE = 5;
 
 type FormStatus = 'draft' | 'published';
 
@@ -109,6 +113,7 @@ export default function SermonsAdminPage() {
         status: 'draft'
       });
 
+      resetPage();
       await loadSermons();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -139,6 +144,7 @@ export default function SermonsAdminPage() {
     try {
       await deleteSermon(id);
       setSuccess('Sermon deleted successfully!');
+      resetPage();
       await loadSermons();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -160,6 +166,16 @@ export default function SermonsAdminPage() {
     });
     setFormError('');
   };
+
+  const {
+    currentPage,
+    pageCount,
+    paginatedItems: paginatedSermons,
+    showPagination,
+    prevPage,
+    nextPage,
+    resetPage,
+  } = usePagination(sermons, SERMONS_PER_PAGE);
 
   return (
     <div className="admin-page">
@@ -320,19 +336,20 @@ export default function SermonsAdminPage() {
           </button>
         </div>
       ) : (
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Title</th>
-                <th>Speaker</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sermons.map((sermon) => (
+        <>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Title</th>
+                  <th>Speaker</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedSermons.map((sermon) => (
                 <tr key={sermon.id}>
                   <td>{new Date(sermon.sermonDate).toLocaleDateString()}</td>
                   <td>{sermon.title}</td>
@@ -354,9 +371,17 @@ export default function SermonsAdminPage() {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+          <PaginationControls
+            currentPage={currentPage}
+            pageCount={pageCount}
+            onPreviousClick={prevPage}
+            onNextClick={nextPage}
+            show={showPagination}
+          />
+        </>
       )}
     </div>
   );

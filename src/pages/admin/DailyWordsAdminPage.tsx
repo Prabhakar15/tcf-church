@@ -4,6 +4,10 @@ import { getAllDailyWords, createDailyWord, updateDailyWord, deleteDailyWord } f
 import { extractYouTubeVideoId } from '../../lib/youtubeUtils';
 import YouTubeEmbed from '../../components/youtube/YouTubeEmbed';
 import AdminBackNav from '../../components/admin/AdminBackNav';
+import { usePagination } from '../../hooks/usePagination';
+import PaginationControls from '../../components/admin/PaginationControls';
+
+const DAILY_WORDS_PER_PAGE = 5;
 
 type FormStatus = 'draft' | 'published';
 
@@ -131,6 +135,7 @@ export default function DailyWordsAdminPage() {
         status: 'draft'
       });
 
+      resetPage();
       await loadDailyWords();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -163,6 +168,7 @@ export default function DailyWordsAdminPage() {
     try {
       await deleteDailyWord(id);
       setSuccess('Daily word deleted successfully!');
+      resetPage();
       await loadDailyWords();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -186,6 +192,16 @@ export default function DailyWordsAdminPage() {
     });
     setFormError('');
   };
+
+  const {
+    currentPage,
+    pageCount,
+    paginatedItems: paginatedWords,
+    showPagination,
+    prevPage,
+    nextPage,
+    resetPage,
+  } = usePagination(words, DAILY_WORDS_PER_PAGE);
 
   return (
     <div className="admin-page">
@@ -371,20 +387,21 @@ export default function DailyWordsAdminPage() {
           </button>
         </div>
       ) : (
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Title</th>
-                <th>Scripture</th>
-                <th>Status</th>
-                <th>YouTube</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {words.map((word) => (
+        <>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Title</th>
+                  <th>Scripture</th>
+                  <th>Status</th>
+                  <th>YouTube</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedWords.map((word) => (
                 <tr key={word.id}>
                   <td>{new Date(word.publishDate).toLocaleDateString()}</td>
                   <td>{word.title}</td>
@@ -407,9 +424,17 @@ export default function DailyWordsAdminPage() {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+          <PaginationControls
+            currentPage={currentPage}
+            pageCount={pageCount}
+            onPreviousClick={prevPage}
+            onNextClick={nextPage}
+            show={showPagination}
+          />
+        </>
       )}
     </div>
   );

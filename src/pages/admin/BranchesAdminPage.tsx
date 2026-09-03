@@ -3,6 +3,10 @@ import type { Branch } from '../../types';
 import { getAllBranches, createBranch, updateBranch, deleteBranch } from '../../lib/queries/branches';
 import { REGIONS } from '../../lib/constants/services';
 import AdminBackNav from '../../components/admin/AdminBackNav';
+import { usePagination } from '../../hooks/usePagination';
+import PaginationControls from '../../components/admin/PaginationControls';
+
+const BRANCHES_PER_PAGE = 5;
 
 type BranchFormStatus = 'draft' | 'published';
 
@@ -111,6 +115,7 @@ export default function BranchesAdminPage() {
         status: 'published'
       });
 
+      resetPage();
       await loadBranches();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -142,6 +147,7 @@ export default function BranchesAdminPage() {
     try {
       await deleteBranch(id);
       setSuccess('Branch deleted successfully!');
+      resetPage();
       await loadBranches();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -164,6 +170,16 @@ export default function BranchesAdminPage() {
     });
     setFormError('');
   };
+
+  const {
+    currentPage,
+    pageCount,
+    paginatedItems: paginatedBranches,
+    showPagination,
+    prevPage,
+    nextPage,
+    resetPage,
+  } = usePagination(branches, BRANCHES_PER_PAGE);
 
   return (
     <div className="admin-page">
@@ -276,19 +292,20 @@ export default function BranchesAdminPage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280' }}>Loading branches...</div>
       ) : branches.length > 0 ? (
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Branch Name</th>
-                <th>Region</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {branches.map((branch) => (
+        <>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Branch Name</th>
+                  <th>Region</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedBranches.map((branch) => (
                 <tr key={branch.id}>
                   <td><strong>{branch.branchName}</strong></td>
                   <td>{branch.region === 'SINGAPORE' ? 'Singapore' : 'India'}</td>
@@ -310,9 +327,17 @@ export default function BranchesAdminPage() {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+          <PaginationControls
+            currentPage={currentPage}
+            pageCount={pageCount}
+            onPreviousClick={prevPage}
+            onNextClick={nextPage}
+            show={showPagination}
+          />
+        </>
       ) : (
         <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280' }}>
           No branches yet. Create one to get started.

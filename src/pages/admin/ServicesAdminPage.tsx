@@ -13,6 +13,8 @@ import {
   isFellowshipGroupRequiredForCategory,
 } from '../../lib/constants/services';
 import AdminBackNav from '../../components/admin/AdminBackNav';
+import { usePagination } from '../../hooks/usePagination';
+import PaginationControls from '../../components/admin/PaginationControls';
 
 type ServiceStatus = 'draft' | 'published';
 type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
@@ -35,7 +37,6 @@ export default function ServicesAdminPage() {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<RecurringService | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
   
   const [formData, setFormData] = useState<{
     title: string;
@@ -199,6 +200,7 @@ export default function ServicesAdminPage() {
       setShowForm(false);
       setEditing(null);
       resetForm();
+      resetPage();
       await loadData();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -256,6 +258,7 @@ export default function ServicesAdminPage() {
     try {
       await deleteService(id);
       setSuccess('Service deleted successfully!');
+      resetPage();
       await loadData();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -294,11 +297,15 @@ export default function ServicesAdminPage() {
     }));
   };
 
-  const startIdx = currentPage * SERVICES_PER_PAGE;
-  const endIdx = startIdx + SERVICES_PER_PAGE;
-  const paginatedServices = services.slice(startIdx, endIdx);
-  const pageCount = Math.ceil(services.length / SERVICES_PER_PAGE);
-  const showPagination = pageCount > 1;
+  const {
+    currentPage,
+    pageCount,
+    paginatedItems: paginatedServices,
+    showPagination,
+    prevPage,
+    nextPage,
+    resetPage,
+  } = usePagination(services, SERVICES_PER_PAGE);
 
   const filteredBranches = getFilteredBranches();
 
@@ -556,29 +563,13 @@ export default function ServicesAdminPage() {
             </table>
           </div>
 
-          {showPagination && (
-            <div className="pagination-container">
-              <button
-                className="pagination-btn"
-                onClick={() => setCurrentPage((p) => p - 1)}
-                disabled={currentPage === 0}
-                aria-label="Previous page"
-              >
-                ← Previous
-              </button>
-              <span className="pagination-info">
-                Page {currentPage + 1} of {pageCount}
-              </span>
-              <button
-                className="pagination-btn"
-                onClick={() => setCurrentPage((p) => p + 1)}
-                disabled={currentPage >= pageCount - 1}
-                aria-label="Next page"
-              >
-                Next →
-              </button>
-            </div>
-          )}
+          <PaginationControls
+            currentPage={currentPage}
+            pageCount={pageCount}
+            onPreviousClick={prevPage}
+            onNextClick={nextPage}
+            show={showPagination}
+          />
         </>
       ) : (
         <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280' }}>
@@ -636,47 +627,6 @@ export default function ServicesAdminPage() {
         
         .form-actions { display: flex; gap: 1rem; margin-top: 2rem; }
         .form-actions button { flex: 1; }
-
-        .pagination-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 1.5rem;
-          padding: 1.5rem;
-          background: white;
-          border-radius: 8px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .pagination-btn {
-          padding: 0.75rem 1.5rem;
-          background-color: #C9A227;
-          color: #0B1F3A;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 600;
-          font-size: 0.95rem;
-          transition: all 0.3s ease;
-        }
-
-        .pagination-btn:hover:not(:disabled) {
-          background-color: #E0B644;
-          transform: translateY(-2px);
-        }
-
-        .pagination-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .pagination-info {
-          font-size: 0.95rem;
-          color: #6B7280;
-          font-weight: 500;
-          min-width: 120px;
-          text-align: center;
-        }
       `}</style>
     </div>
   );

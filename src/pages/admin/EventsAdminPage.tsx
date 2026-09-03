@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import type { Event } from '../../types';
 import { getAllEvents, createEvent, updateEvent, deleteEvent } from '../../lib/queries/events';
 import AdminBackNav from '../../components/admin/AdminBackNav';
+import { usePagination } from '../../hooks/usePagination';
+import PaginationControls from '../../components/admin/PaginationControls';
+
+const EVENTS_PER_PAGE = 5;
 
 type EventStatus = 'draft' | 'published' | 'cancelled';
 
@@ -103,6 +107,7 @@ export default function EventsAdminPage() {
         status: 'draft'
       });
 
+      resetPage();
       await loadEvents();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -136,6 +141,7 @@ export default function EventsAdminPage() {
     try {
       await deleteEvent(id);
       setSuccess('Event deleted successfully!');
+      resetPage();
       await loadEvents();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -160,6 +166,16 @@ export default function EventsAdminPage() {
     });
     setFormError('');
   };
+
+  const {
+    currentPage,
+    pageCount,
+    paginatedItems: paginatedEvents,
+    showPagination,
+    prevPage,
+    nextPage,
+    resetPage,
+  } = usePagination(events, EVENTS_PER_PAGE);
 
   return (
     <div className="admin-page">
@@ -346,43 +362,52 @@ export default function EventsAdminPage() {
           </button>
         </div>
       ) : (
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Title</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event) => (
-                <tr key={event.id}>
-                  <td>{new Date(event.eventDate).toLocaleDateString()}</td>
-                  <td>{event.title}</td>
-                  <td>{event.location || '—'}</td>
-                  <td>
-                    <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.875rem', backgroundColor: event.status === 'published' ? '#dcfce7' : event.status === 'cancelled' ? '#fee2e2' : '#fef3c7', color: event.status === 'published' ? '#15803d' : event.status === 'cancelled' ? '#dc2626' : '#92400e' }}>
-                      {event.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="actions">
-                      <button className="btn btn-secondary" onClick={() => handleEdit(event)} disabled={submitting}>
-                        Edit
-                      </button>
-                      <button className="btn btn-danger" onClick={() => handleDelete(event.id)} disabled={submitting}>
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Title</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {paginatedEvents.map((event) => (
+                  <tr key={event.id}>
+                    <td>{new Date(event.eventDate).toLocaleDateString()}</td>
+                    <td>{event.title}</td>
+                    <td>{event.location || '—'}</td>
+                    <td>
+                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', fontSize: '0.875rem', backgroundColor: event.status === 'published' ? '#dcfce7' : event.status === 'cancelled' ? '#fee2e2' : '#fef3c7', color: event.status === 'published' ? '#15803d' : event.status === 'cancelled' ? '#dc2626' : '#92400e' }}>
+                        {event.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="actions">
+                        <button className="btn btn-secondary" onClick={() => handleEdit(event)} disabled={submitting}>
+                          Edit
+                        </button>
+                        <button className="btn btn-danger" onClick={() => handleDelete(event.id)} disabled={submitting}>
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <PaginationControls
+            currentPage={currentPage}
+            pageCount={pageCount}
+            onPreviousClick={prevPage}
+            onNextClick={nextPage}
+            show={showPagination}
+          />
+        </>
       )}
     </div>
   );
