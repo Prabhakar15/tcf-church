@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import type { PrayerRequest } from '../../types';
 import { getPrayerRequests, updatePrayerRequestStatus, deletePrayerRequest } from '../../lib/queries/prayerRequests';
 import AdminBackNav from '../../components/admin/AdminBackNav';
+import { usePagination } from '../../hooks/usePagination';
+import PaginationControls from '../../components/admin/PaginationControls';
+
+const PRAYER_REQUESTS_PER_PAGE = 5;
 
 export default function PrayerRequestsAdminPage() {
   const [requests, setRequests] = useState<PrayerRequest[]>([]);
@@ -59,6 +63,15 @@ export default function PrayerRequestsAdminPage() {
   };
 
   const filteredRequests = requests.filter(r => filter === 'all' ? true : r.status === filter);
+
+  const {
+    currentPage,
+    pageCount,
+    paginatedItems: paginatedRequests,
+    showPagination,
+    prevPage,
+    nextPage,
+  } = usePagination(filteredRequests, PRAYER_REQUESTS_PER_PAGE);
 
   const statusColors: Record<PrayerRequest['status'], { bg: string; text: string }> = {
     new: { bg: '#dbeafe', text: '#1e40af' },
@@ -139,20 +152,21 @@ export default function PrayerRequestsAdminPage() {
           <p>No prayer requests found.</p>
         </div>
       ) : (
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Submitted</th>
-                <th>Name</th>
-                <th>Request</th>
-                <th>Contact Requested</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRequests.map((request) => (
+        <>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Submitted</th>
+                  <th>Name</th>
+                  <th>Request</th>
+                  <th>Contact Requested</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedRequests.map((request) => (
                 <tr key={request.id}>
                   <td>{new Date(request.createdAt).toLocaleDateString()}</td>
                   <td>{request.name}</td>
@@ -175,9 +189,17 @@ export default function PrayerRequestsAdminPage() {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+          <PaginationControls
+            currentPage={currentPage}
+            pageCount={pageCount}
+            onPreviousClick={prevPage}
+            onNextClick={nextPage}
+            show={showPagination}
+          />
+        </>
       )}
 
       <div className={`modal-overlay ${showModal ? 'show' : ''}`}>

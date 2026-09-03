@@ -13,6 +13,10 @@ import {
 import { getPublishedBranches } from '../../lib/queries/branches';
 import type { Branch } from '../../types';
 import AdminBackNav from '../../components/admin/AdminBackNav';
+import { usePagination } from '../../hooks/usePagination';
+import PaginationControls from '../../components/admin/PaginationControls';
+
+const TESTIMONIES_PER_PAGE = 5;
 
 export default function TestimoniesAdminPage() {
   const [testimonies, setTestimonies] = useState<Testimony[]>([]);
@@ -189,6 +193,15 @@ export default function TestimoniesAdminPage() {
 
   const filteredTestimonies = testimonies;
 
+  const {
+    currentPage,
+    pageCount,
+    paginatedItems: paginatedTestimonies,
+    showPagination,
+    prevPage,
+    nextPage,
+  } = usePagination(filteredTestimonies, TESTIMONIES_PER_PAGE);
+
   const statusColors: Record<'draft' | 'published' | 'rejected', { bg: string; text: string }> = {
     draft: { bg: '#dbeafe', text: '#1e40af' },
     published: { bg: '#dcfce7', text: '#15803d' },
@@ -313,8 +326,9 @@ export default function TestimoniesAdminPage() {
           </p>
         </div>
       ) : (
-        <div className="cards-container">
-          {filteredTestimonies.map(testimony => (
+        <>
+          <div className="cards-container">
+            {paginatedTestimonies.map(testimony => (
             <div key={testimony.id} className="card">
               <div className="card-header">
                 <h3 className="card-title">{testimony.title}</h3>
@@ -375,7 +389,15 @@ export default function TestimoniesAdminPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+          <PaginationControls
+            currentPage={currentPage}
+            pageCount={pageCount}
+            onPreviousClick={prevPage}
+            onNextClick={nextPage}
+            show={showPagination}
+          />
+        </>
       )}
 
       {/* Modal */}
