@@ -24,14 +24,11 @@ export default function FinalCTA() {
           {/* Accent divider */}
           <div className="final-cta-divider"></div>
 
-          {/* Action buttons */}
+          {/* Primary CTA */}
           <div className="final-cta-buttons">
-            <Link to="/about" className="final-cta-btn final-cta-btn-primary">
-              Learn More About Us
+            <Link to="/services" className="final-cta-btn final-cta-btn-primary">
+              Find Service Times
             </Link>
-            <a href="#worship" className="final-cta-btn final-cta-btn-secondary">
-              Join Us for Worship
-            </a>
           </div>
         </div>
       </div>
@@ -137,17 +134,8 @@ export default function FinalCTA() {
 
         .final-cta-buttons {
           display: flex;
-          gap: 1.5rem;
           justify-content: center;
-          flex-wrap: wrap;
           margin-top: 2rem;
-        }
-
-        @media (max-width: 767px) {
-          .final-cta-buttons {
-            flex-direction: column;
-            gap: 1rem;
-          }
         }
 
         .final-cta-btn {
@@ -179,19 +167,6 @@ export default function FinalCTA() {
           border-color: #B8921F;
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(201, 162, 39, 0.25);
-        }
-
-        .final-cta-btn-secondary {
-          background-color: transparent;
-          color: #0B1F3A;
-          border-color: #0B1F3A;
-        }
-
-        .final-cta-btn-secondary:hover {
-          background-color: #0B1F3A;
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(11, 31, 58, 0.15);
         }
       `}</style>
     </section>
