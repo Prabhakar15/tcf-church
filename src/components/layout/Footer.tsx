@@ -72,6 +72,10 @@ export default function Footer() {
               <span>→</span>
               <span>Daily Word</span>
             </Link>
+            <Link to="/testimonies" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
+              <span>→</span>
+              <span>Testimonies</span>
+            </Link>
             <Link to="/sermons" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
               <span>→</span>
               <span>Sermons</span>
