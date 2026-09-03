@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { churchData } from '../../data/church';
 import { getPublishedServices } from '../../lib/queries/services';
+import { navItems } from '../../config/navigationItems';
 import type { RecurringService } from '../../types';
 
 export default function Footer() {
@@ -52,42 +53,12 @@ export default function Footer() {
         <div>
           <h4 style={{ fontWeight: '600', marginBottom: '1.5rem', color: '#C9A227', fontSize: '1.1rem' }}>Navigate</h4>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Link to="/" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <span>→</span>
-              <span>Home</span>
-            </Link>
-            <Link to="/about" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <span>→</span>
-              <span>About</span>
-            </Link>
-            <Link to="/services" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <span>→</span>
-              <span>Services</span>
-            </Link>
-            <Link to="/branches" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <span>→</span>
-              <span>Branches</span>
-            </Link>
-            <Link to="/daily-word" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <span>→</span>
-              <span>Daily Word</span>
-            </Link>
-            <Link to="/testimonies" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <span>→</span>
-              <span>Testimonies</span>
-            </Link>
-            <Link to="/sermons" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <span>→</span>
-              <span>Sermons</span>
-            </Link>
-            <Link to="/events" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <span>→</span>
-              <span>Events</span>
-            </Link>
-            <Link to="/contact" style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <span>→</span>
-              <span>Contact</span>
-            </Link>
+            {navItems.map((item) => (
+              <Link key={item.path} to={item.path} style={{ fontSize: '0.875rem', color: '#d1d5db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.5rem', transition: 'all 0.3s ease', cursor: 'pointer', borderRadius: '0.375rem' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A227'; e.currentTarget.style.backgroundColor = 'rgba(201, 162, 39, 0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#d1d5db'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                <span>→</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
           </nav>
         </div>
 

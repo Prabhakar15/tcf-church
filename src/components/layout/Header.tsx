@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { navItems } from '../../config/navigationItems';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,18 +20,6 @@ export default function Header() {
   const isMobile = screenWidth < 768;
   const isTablet = screenWidth >= 768 && screenWidth < 1024;
   const isDesktop = screenWidth >= 1024;
-
-  const navLinks = [
-    { label: 'Home', path: '/' },
-    { label: 'About', path: '/about' },
-    { label: 'Services', path: '/services' },
-    { label: 'Branches', path: '/branches' },
-    { label: 'Daily Word', path: '/daily-word' },
-    { label: 'Testimonies', path: '/testimonies' },
-    { label: 'Media', path: '/media' },
-    { label: 'Events', path: '/events' },
-    { label: 'Contact', path: '/contact' },
-  ];
 
   return (
     <header className="header">
@@ -73,7 +62,7 @@ export default function Header() {
         {/* Desktop Menu */}
         {isDesktop && (
           <div className="nav-desktop">
-            {navLinks.map((item) => (
+            {navItems.map((item) => (
               <Link key={item.path} to={item.path} className="nav-link">
                 {item.label}
                 <div className="nav-underline"></div>
@@ -85,7 +74,7 @@ export default function Header() {
         {/* Tablet Menu */}
         {isTablet && (
           <div className="nav-tablet">
-            {navLinks.slice(0, 5).map((item) => (
+            {navItems.slice(0, 5).map((item) => (
               <Link key={item.path} to={item.path} className="nav-link-tablet">
                 {item.label}
               </Link>
@@ -115,7 +104,7 @@ export default function Header() {
       {/* Mobile Menu */}
       {isMobile && isOpen && (
         <div className="mobile-menu">
-          {navLinks.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
