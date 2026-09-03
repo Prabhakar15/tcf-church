@@ -331,6 +331,12 @@ export default function Header() {
 
         .nav-desktop {
           display: flex;
+          gap: 1.5rem;
+          align-items: center;
+        }
+
+        .nav-desktop-OLD {
+          display: flex;
           gap: 3rem;
           align-items: center;
         }
