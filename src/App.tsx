@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicLayout from './layouts/PublicLayout';
 import HomePage from './pages/HomePage';
 import DailyWordPage from './pages/DailyWordPage';
+import MediaPage from './pages/MediaPage';
 import SermonsPage from './pages/SermonsPage';
 import EventsPage from './pages/EventsPage';
 import ServicesPage from './pages/ServicesPage';
@@ -34,6 +35,7 @@ function App() {
           <Route element={<PublicLayout />}>
             <Route index element={<HomePage />} />
             <Route path="daily-word" element={<DailyWordPage />} />
+            <Route path="media" element={<MediaPage />} />
             <Route path="sermons" element={<SermonsPage />} />
             <Route path="events" element={<EventsPage />} />
             <Route path="services" element={<ServicesPage />} />
