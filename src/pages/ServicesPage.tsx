@@ -221,27 +221,6 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {/* TCF Selah Music Section */}
-      <section className="music-section">
-        <div className="music-container">
-          <div className="music-content">
-            <h2>TCF Selah Music</h2>
-            <p>Worship, praise, and music from TCF</p>
-            <a
-              href="https://www.youtube.com/@tcfselahmusic"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="music-button"
-            >
-              Visit TCF Selah Music
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M7 17L17 7M17 7H7M17 7V17" />
-              </svg>
-            </a>
-          </div>
-        </div>
-      </section>
-
       <style>{`
         .services-page { width: 100%; }
         
@@ -507,55 +486,6 @@ export default function ServicesPage() {
           font-size: 1rem; 
           color: #6B7280; 
           margin: 0; 
-        }
-        
-        .music-section { 
-          background: linear-gradient(135deg, #0B1F3A 0%, #1a3a52 100%); 
-          padding: 4rem 1.5rem; 
-        }
-        @media (max-width: 767px) { .music-section { padding: 2rem 1rem; } }
-        
-        .music-container { max-width: 1000px; margin: 0 auto; }
-        .music-content { 
-          background: rgba(255, 255, 255, 0.05); 
-          border: 2px solid rgba(201, 162, 39, 0.3);
-          border-radius: 16px; 
-          padding: 3rem 2rem;
-          text-align: center;
-          backdrop-filter: blur(10px);
-        }
-        
-        .music-content h2 { 
-          font-size: 2rem; 
-          font-weight: 700; 
-          color: #C9A227; 
-          margin: 0 0 0.75rem 0; 
-        }
-        .music-content p { 
-          font-size: 1.1rem; 
-          color: #E5E7EB; 
-          margin: 0 0 1.5rem 0; 
-        }
-        
-        .music-button {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.75rem;
-          background: linear-gradient(135deg, #C9A227 0%, #E0B644 100%);
-          color: #0B1F3A;
-          font-weight: 700;
-          font-size: 1rem;
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          text-decoration: none;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(201, 162, 39, 0.3);
-          border: none;
-          cursor: pointer;
-        }
-        .music-button:hover { 
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(201, 162, 39, 0.4);
         }
       `}</style>
     </div>
